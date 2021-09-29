@@ -1,6 +1,7 @@
 import os
-import requests
 import zipfile
+
+import requests
 
 from settings import DATA_FOLDER
 

@@ -1,9 +1,10 @@
 import logging
 import os
-from typing import Optional
+from typing import List, Optional, Union
 
 import torch
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import DataLoader
+from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 class InputExample(object):
     """A single training/test example for simple sequence classification."""
 
-    def __init__(self, guid, text_a, text_b=None, label=None):
+    def __init__(self, guid: str, text_a: str, text_b: Optional[str] = None, label: Optional[str] = None):
         """Constructs a InputExample.
 
         Args:
@@ -30,29 +31,30 @@ class InputExample(object):
 
 
 class DataProcessor(object):
-    """Base class for data converters for sequence classification data sets."""
+    """Base class for data2 converters for sequence classification data2 sets."""
 
-    def get_train_examples(self, data_dir):
+    def get_train_examples(self, data_dir: str):
         """Gets a collection of `InputExample`s for the train set."""
         raise NotImplementedError()
 
-    def get_dev_examples(self, data_dir):
+    def get_dev_examples(self, data_dir: str):
         """Gets a collection of `InputExample`s for the dev set."""
         raise NotImplementedError()
 
     def get_labels(self):
-        """Gets the list of labels for this data set."""
+        """Gets the list of labels for this data2 set."""
         raise NotImplementedError()
 
     @classmethod
-    def _read_txt(cls, input_file):
+    def _read_txt(cls, input_file: str) -> List[str]:
         """Reads a tab separated value file."""
-        with open(input_file, "r") as f:
-            text = f.read()
+        with open(input_file, "r", encoding='UTF-8') as f:
+            lines = f.read().splitlines()
+        return lines
 
 
 class MultiemoProcessor(DataProcessor):
-    """Processor for the Multiemo data set"""
+    """Processor for the Multiemo data2 set"""
 
     def __init__(self, lang: str, domain: str, kind: str):
         super(MultiemoProcessor, self).__init__()
@@ -60,36 +62,36 @@ class MultiemoProcessor(DataProcessor):
         self.domain = domain.lower()
         self.kind = kind.lower()
 
-    def get_train_examples(self, data_dir):
+    def get_train_examples(self, data_dir: str) -> List[InputExample]:
         """See base class."""
         file_path = os.path.join(data_dir, self.domain + '.' + self.kind + '.train.' + self.lang + '.txt')
         logger.info(f"LOOKING AT {file_path}")
         return self._create_examples(self._read_txt(file_path), "train")
 
-    def get_dev_examples(self, data_dir):
+    def get_dev_examples(self, data_dir: str) -> List[InputExample]:
         """See base class."""
         file_path = os.path.join(data_dir, self.domain + '.' + self.kind + '.dev.' + self.lang + '.txt')
         return self._create_examples(self._read_txt(file_path), "dev")
 
-    def get_test_examples(self, data_dir):
+    def get_test_examples(self, data_dir: str) -> List[InputExample]:
         """See base class."""
         file_path = os.path.join(data_dir, self.domain + '.' + self.kind + '.test.' + self.lang + '.txt')
         return self._create_examples(self._read_txt(file_path), "test")
 
-    def get_labels(self):
+    def get_labels(self) -> List[str]:
         """See base class."""
         if self.kind == 'text':
-            return ["__label__meta_amb", "__label__meta_minus_m", "__label__meta_plus_m", "___label__meta_zero"]
+            return ["__label__meta_amb", "__label__meta_minus_m", "__label__meta_plus_m", "__label__meta_zero"]
         else:
-            return ["__label__z_amb", "__label__z_minus_m", "__label__z_plus_m", "___label__z_zero"]
+            return ["__label__z_amb", "__label__z_minus_m", "__label__z_plus_m", "__label__z_zero"]
 
-    def _create_examples(self, lines, set_type):
+    def _create_examples(self, lines: List[str], set_type: str) -> List[InputExample]:
         examples = []
         for (i, line) in enumerate(lines):
             guid = "%s-%s" % (set_type, i)
             split_line = line.split('__label__')
             text_a = split_line[0]
-            label = split_line[1]
+            label = '__label__' + split_line[1]
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
         return examples
@@ -97,13 +99,14 @@ class MultiemoProcessor(DataProcessor):
 
 # Create torch dataset
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, encodings: torch.Tensor, labels: Optional[torch.Tensor] = None):
-        self.n_examples = len(labels)
+    def __init__(self, encodings: BatchEncoding, labels: Optional[torch.Tensor] = None):
         self.inputs = encodings
+        self.n_examples = len(self.inputs['input_ids'])
         self.sequence_len = self.inputs['input_ids'].shape[-1]
-        self.inputs.update({'labels': torch.tensor(labels)})
+        if labels:
+            self.inputs.update({'labels': torch.tensor(labels)})
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int):
         return {key: self.inputs[key][idx] for key in self.inputs.keys()}
 
     def __len__(self):
@@ -119,7 +122,8 @@ output_modes = {
 }
 
 
-def get_task_dataloader(task_name: str, set_name: str, tokenizer, raw_data_dir, batch_size, max_seq_length):
+def get_task_dataloader(task_name: str, set_name: str, tokenizer: PreTrainedTokenizerBase,
+                        raw_data_dir: str, batch_size: int, max_seq_length: Optional[int] = None) -> DataLoader:
     if 'multiemo' in task_name:
         _, lang, domain, kind = task_name.split('_')
         processor = MultiemoProcessor(lang, domain, kind)
@@ -129,7 +133,10 @@ def get_task_dataloader(task_name: str, set_name: str, tokenizer, raw_data_dir, 
         else:
             processor = processors[task_name]()
 
-    output_mode = output_modes[task_name]
+    if 'multiemo' in task_name:
+        output_mode = output_modes['multiemo']
+    else:
+        output_mode = output_modes[task_name]
 
     label_list = processor.get_labels()
     if set_name.lower() == 'train':
@@ -170,10 +177,10 @@ def get_task_dataloader(task_name: str, set_name: str, tokenizer, raw_data_dir, 
     dataset = Dataset(text_tokenized, all_label_ids)
     dataloader = DataLoader(dataset, batch_size=batch_size,
                             shuffle=True if set_name != 'test' else False)
-    return examples, dataloader, all_label_ids
+    return dataloader
 
 
-def _get_label_id(example, label_map, output_mode):
+def _get_label_id(example: InputExample, label_map: dict, output_mode: str) -> Union[int, float]:
     if output_mode == "classification":
         label_id = label_map[example.label]
     elif output_mode == "regression":
