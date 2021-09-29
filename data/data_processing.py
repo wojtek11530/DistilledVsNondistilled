@@ -97,14 +97,13 @@ class MultiemoProcessor(DataProcessor):
         return examples
 
 
-# Create torch dataset
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, encodings: BatchEncoding, labels: Optional[torch.Tensor] = None):
         self.inputs = encodings
         self.n_examples = len(self.inputs['input_ids'])
         self.sequence_len = self.inputs['input_ids'].shape[-1]
-        if labels:
-            self.inputs.update({'labels': torch.tensor(labels)})
+        if labels is not None:
+            self.inputs.update({'labels': labels})
 
     def __getitem__(self, idx: int):
         return {key: self.inputs[key][idx] for key in self.inputs.keys()}
