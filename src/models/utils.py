@@ -7,13 +7,17 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 
-def result_to_file(result: dict, file_name: str) -> None:
+def result_to_file(result: dict, file_name: str, verbose: bool = True) -> None:
     with open(file_name, "a") as writer:
-        logger.info("***** Eval results *****")
+        if verbose:
+            logger.info("***** Eval results *****")
+
         for key in sorted(result.keys()):
-            logger.info(" %s = %s", key, str(result[key]))
+            if verbose:
+                logger.info(" %s = %s", key, str(result[key]))
             writer.write("%s = %s" % (key, str(result[key])))
-            writer.write("")
+
+        writer.write("")
 
 
 def is_folder_empty(folder_name: str):

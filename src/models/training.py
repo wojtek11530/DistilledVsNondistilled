@@ -1,11 +1,11 @@
 import logging
 import os
 import sys
+import time
+from datetime import timedelta
 from typing import Tuple
 
-import numpy as np
 import torch
-from sklearn.metrics import classification_report
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm, trange
 from transformers import (
@@ -28,7 +28,12 @@ PYTORCH_LOOP_TRAINING = True
 def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, batch_size: int = 32,
                 learning_rate: float = 5e-5, weight_decay: float = 0.01, warmup_steps: int = 0,
                 max_seq_length: int = 512, do_test: bool = True):
+    training_parameters = {'model_name': model_name, 'task_name': task_name, 'epochs': epochs, 'batch_size': batch_size,
+                           'learning_rate': learning_rate, 'weight_decay': weight_decay, 'warmup_steps': warmup_steps,
+                           'max_seq_length': max_seq_length}
+
     output_dir = manage_output_dir(model_name, task_name)
+    output_training_params_file = os.path.join(output_dir, "training_params.txt")
 
     num_labels = get_num_labels(task_name)
     # output_mode = get_output_mode(task_name)
@@ -51,6 +56,8 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
                                    raw_data_dir=data_dir, max_seq_length=max_seq_length)
     logger.info("Dev dataset loaded.")
 
+    training_start_time = time.monotonic()
+
     if PYTORCH_LOOP_TRAINING:
         train_with_pytorch_loop(model, tokenizer, train_dataset, dev_dataset,
                                 output_dir, epochs, batch_size, learning_rate,
@@ -58,6 +65,14 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     else:
         train_with_trainer(model, train_dataset, dev_dataset, output_dir,
                            epochs, batch_size, learning_rate, warmup_steps, weight_decay)
+
+    training_end_time = time.monotonic()
+
+    diff = timedelta(seconds=training_end_time - training_start_time)
+    diff_seconds = int(diff.total_seconds())
+    training_parameters['training_time'] = diff_seconds
+
+    result_to_file(training_parameters, output_training_params_file, False)
 
     if do_test:
         test_model(model_name, task_name, data_dir, batch_size, max_seq_length)
