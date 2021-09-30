@@ -59,6 +59,14 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
         train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length,
                            model, task_name, output_dir, tokenizer, train_dataset, warmup_steps, weight_decay)
 
+    # LOADING THE BEST MODEL
+    model = AutoModelForSequenceClassification.from_pretrained(
+        output_dir,
+        num_labels=num_labels
+    )
+    tokenizer = AutoTokenizer.from_pretrained(output_dir)
+    logger.info(f"Best model from {output_dir} loaded.")
+
     test_dataset = get_task_dataset(task_name, set_name='test', tokenizer=tokenizer,
                                     raw_data_dir=data_dir, max_seq_length=max_seq_length)
     logger.info("Test dataset loaded.")
@@ -143,16 +151,6 @@ def train_with_pytorch_loop(
 
         print()
 
-    # ADD LOADING THE BEST MODEL
-    # model = AutoModelForSequenceClassification.from_pretrained(
-    #     model_name,
-    #     num_labels=num_labels,
-    #     cache_dir=os.path.join(MODELS_FOLDER, model_name)
-    # )
-    # logger.info(f"Model {model_name} loaded.")
-    #
-    # tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=os.path.join(MODELS_FOLDER, model_name))
-
     logger.info("Training finished.")
 
     if global_step > 0:
@@ -208,11 +206,11 @@ def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader) \
 
 def result_to_file(result: dict, file_name: str) -> None:
     with open(file_name, "a") as writer:
-        writer.write("")
         logger.info("***** Eval results *****")
         for key in sorted(result.keys()):
-            logger.info("  %s = %s", key, str(result[key]))
-            writer.write("%s = %s\n" % (key, str(result[key])))
+            logger.info(" %s = %s", key, str(result[key]))
+            writer.write("%s = %s" % (key, str(result[key])))
+            writer.write("")
 
 
 def train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length, model,
