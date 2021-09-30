@@ -1,11 +1,11 @@
 import logging
 import os
 import sys
-from typing import Any, Dict, Tuple
+from typing import Tuple
 
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score, classification_report, f1_score
+from sklearn.metrics import classification_report
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm, trange
 from transformers import (
@@ -13,6 +13,8 @@ from transformers import (
     TrainingArguments, get_linear_schedule_with_warmup)
 
 from src.data.data_processing import Dataset, get_num_labels, get_task_dataset
+from src.models.evaluation import evaluate, compute_metrics, test_model
+from src.models.utils import result_to_file
 from src.settings import MODELS_FOLDER
 
 log_format = '%(asctime)s %(message)s'
@@ -25,7 +27,7 @@ PYTORCH_LOOP_TRAINING = True
 
 def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, batch_size: int = 32,
                 learning_rate: float = 5e-5, weight_decay: float = 0.01, warmup_steps: int = 0,
-                max_seq_length: int = 512):
+                max_seq_length: int = 512, do_test: bool = True):
     output_dir = os.path.join(MODELS_FOLDER, model_name, task_name)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -59,26 +61,8 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
         train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length,
                            model, task_name, output_dir, tokenizer, train_dataset, warmup_steps, weight_decay)
 
-    # LOADING THE BEST MODEL
-    model = AutoModelForSequenceClassification.from_pretrained(
-        output_dir,
-        num_labels=num_labels
-    )
-    tokenizer = AutoTokenizer.from_pretrained(output_dir)
-    logger.info(f"Best model from {output_dir} loaded.")
-
-    test_dataset = get_task_dataset(task_name, set_name='test', tokenizer=tokenizer,
-                                    raw_data_dir=data_dir, max_seq_length=max_seq_length)
-    logger.info("Test dataset loaded.")
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-    logger.info("Evaluation on test dataset.")
-    result, y_logits, y_true = evaluate(model, test_dataloader)
-
-    y_pred = np.argmax(y_logits, axis=1)
-    result_to_file(result, os.path.join(output_dir, "test_results.txt"))
-    print('\n\t**** Classification report ****\n')
-    print(classification_report(y_true, y_pred))
+    if do_test:
+        test_model(model_name, task_name, data_dir, batch_size, max_seq_length)
 
 
 def train_with_pytorch_loop(
@@ -171,50 +155,8 @@ def get_optimizer(model: PreTrainedModel, learning_rate: float, weight_decay: fl
     return optimizer
 
 
-def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader) \
-        -> Tuple[Dict[Any, Any], np.ndarray, np.ndarray]:
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    eval_loss = 0.0
-    nb_eval_steps = 0
-    all_logits = None
-    out_label_ids = None
-    for batch in tqdm(eval_dataloader, desc="Evaluating"):
-        model.eval()
-        batch = {k: v.to(device) for k, v in batch.items()}
-
-        with torch.no_grad():
-            outputs = model(**batch)
-
-        tmp_eval_loss = outputs.loss
-        logits = outputs.logits
-        eval_loss += tmp_eval_loss.mean().item()
-
-        nb_eval_steps += 1
-        if all_logits is None:
-            all_logits = logits.detach().cpu().numpy()
-            out_label_ids = batch['labels'].detach().cpu().numpy()
-        else:
-            all_logits = np.append(all_logits, logits.detach().cpu().numpy(), axis=0)
-            out_label_ids = np.append(out_label_ids, batch['labels'].detach().cpu().numpy(), axis=0)
-
-    eval_loss = eval_loss / nb_eval_steps
-
-    results = compute_metrics((all_logits, out_label_ids))
-    results['eval_loss'] = eval_loss
-    return results, all_logits, out_label_ids
-
-
-def result_to_file(result: dict, file_name: str) -> None:
-    with open(file_name, "a") as writer:
-        logger.info("***** Eval results *****")
-        for key in sorted(result.keys()):
-            logger.info(" %s = %s", key, str(result[key]))
-            writer.write("%s = %s" % (key, str(result[key])))
-            writer.write("")
-
-
-def train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length, model,
-                       task_name, tokenizer, output_dir, train_dataset, warmup_steps, weight_decay):
+def train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length,
+                       model, task_name, output_dir, tokenizer, train_dataset, warmup_steps, weight_decay):
     # Define Trainer
     training_args = TrainingArguments(
         output_dir=output_dir,
@@ -239,12 +181,3 @@ def train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate,
     logger.info("***** Running training *****")
     trainer.train()
     logger.info("Training finished.")
-
-
-def compute_metrics(eval_pred):
-    logits, labels = eval_pred
-    preds = np.argmax(logits, axis=1)
-
-    accuracy = accuracy_score(y_true=labels, y_pred=preds)
-    f1 = f1_score(y_true=labels, y_pred=preds, average='macro')
-    return {"accuracy": accuracy, "f1": f1}
