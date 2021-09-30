@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
