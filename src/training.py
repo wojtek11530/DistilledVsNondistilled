@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from typing import Tuple
 
 import numpy as np
 import torch
@@ -26,6 +27,8 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     output_dir = os.path.join(MODELS_FOLDER, model_name, task_name)
 
     num_labels = get_num_labels(task_name)
+    output_mode = get_output_mode(task_name)
+
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
         num_labels=num_labels,
@@ -44,20 +47,29 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
                                    raw_data_dir=data_dir, max_seq_length=max_seq_length)
     logger.info("Dev dataset loaded.")
 
-    return train_with_pytorch_loop(model, tokenizer, train_dataset, dev_dataset,
-                                   output_dir, task_name, epochs, batch_size, learning_rate,
-                                   warmup_steps, weight_decay)
+    train_with_pytorch_loop(model, tokenizer, train_dataset, dev_dataset,
+                            output_dir, output_mode,
+                            epochs, batch_size, learning_rate,
+                            warmup_steps, weight_decay)
 
     # train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length,
     # model, task_name, output_dir, tokenizer, train_dataset, warmup_steps, weight_decay)
 
+    test_dataset = get_task_dataset(task_name, set_name='test', tokenizer=tokenizer,
+                                    raw_data_dir=data_dir, max_seq_length=max_seq_length)
+    logger.info("Test dataset loaded.")
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    result, y_pred, y_true = evaluate(model, test_dataloader, output_mode)
+    result_to_file(result, os.path.join(output_dir, "test_results.txt"))
+    print(classification_report(y_true, y_pred))
+
 
 def train_with_pytorch_loop(model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
                             train_dataset: Dataset, dev_dataset: Dataset,
-                            output_dir: str, task_name: str,
+                            output_dir: str, output_mode: str,
                             epochs: int, batch_size: int, learning_rate: float,
-                            warmup_steps: int, weight_decay: float):
-    output_mode = get_output_mode(task_name)
+                            warmup_steps: int, weight_decay: float) -> Tuple[int, float]:
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info("device: {}".format(device))
@@ -106,7 +118,7 @@ def train_with_pytorch_loop(model: PreTrainedModel, tokenizer: PreTrainedTokeniz
         logger.info("  Num examples = %d", len(dev_dataset))
         logger.info("  Batch size = %d", batch_size)
 
-        result = evaluate(model, dev_dataloader, output_mode, device)
+        result, _, _ = evaluate(model, dev_dataloader, output_mode)
         result['global_step'] = global_step
         result['avg_train_loss'] = avg_train_loss
 
@@ -130,7 +142,7 @@ def train_with_pytorch_loop(model: PreTrainedModel, tokenizer: PreTrainedTokeniz
     return global_step, tr_loss / global_step
 
 
-def get_optimizer(model: PreTrainedModel, learning_rate: float, weight_decay: float):
+def get_optimizer(model: PreTrainedModel, learning_rate: float, weight_decay: float) -> AdamW:
     param_optimizer = list(model.named_parameters())
     no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
     optimizer_grouped_parameters = [
@@ -142,7 +154,9 @@ def get_optimizer(model: PreTrainedModel, learning_rate: float, weight_decay: fl
     return optimizer
 
 
-def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader, output_mode: str, device: str):
+def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader, output_mode: str) \
+        -> Tuple[dict, np.ndarray, np.ndarray]:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     eval_loss = 0.0
     nb_eval_steps = 0
     preds = None
@@ -174,10 +188,10 @@ def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader, output_mode: s
 
     results = compute_metrics((preds, out_label_ids))
     results['eval_loss'] = eval_loss
-    return results
+    return results, preds, out_label_ids
 
 
-def result_to_file(result: dict, file_name: str):
+def result_to_file(result: dict, file_name: str) -> None:
     with open(file_name, "a") as writer:
         writer.write("")
         logger.info("***** Eval results *****")
@@ -212,11 +226,6 @@ def train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate,
     logger.info("***** Running training *****")
     trainer.train()
     logger.info("Training finished.")
-    test_dataset = get_task_dataset(task_name, set_name='test', tokenizer=tokenizer,
-                                    raw_data_dir=data_dir, max_seq_length=max_seq_length)
-    predictions = trainer.predict(test_dataset)
-    y_pred = np.argmax(predictions[1], axis=1)
-    print(classification_report())
 
 
 def compute_metrics(eval_pred):
