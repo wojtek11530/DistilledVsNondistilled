@@ -40,7 +40,9 @@ def test_model(model_name: str, task_name: str, data_dir: str, batch_size: int =
     logger.info("Test dataset loaded.")
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    logger.info("Evaluation on test dataset.")
+    logger.info("\n***** Running evaluation on test dataset *****")
+    logger.info("  Num examples = %d", len(test_dataset))
+    logger.info("  Batch size = %d", batch_size)
     result, y_logits, y_true = evaluate(model, test_dataloader)
 
     y_pred = np.argmax(y_logits, axis=1)

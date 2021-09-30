@@ -58,8 +58,8 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
                                 output_dir, epochs, batch_size, learning_rate,
                                 warmup_steps, weight_decay)
     else:
-        train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length,
-                           model, task_name, output_dir, tokenizer, train_dataset, warmup_steps, weight_decay)
+        train_with_trainer(model, train_dataset, dev_dataset, output_dir,
+                           epochs, batch_size, learning_rate, warmup_steps, weight_decay)
 
     if do_test:
         test_model(model_name, task_name, data_dir, batch_size, max_seq_length)
@@ -155,8 +155,8 @@ def get_optimizer(model: PreTrainedModel, learning_rate: float, weight_decay: fl
     return optimizer
 
 
-def train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length,
-                       model, task_name, output_dir, tokenizer, train_dataset, warmup_steps, weight_decay):
+def train_with_trainer(model: PreTrainedModel, train_dataset: Dataset, dev_dataset: Dataset, output_dir: str,
+                       epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float):
     # Define Trainer
     training_args = TrainingArguments(
         output_dir=output_dir,
