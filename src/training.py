@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score, f1_score
 from transformers import AutoModelForSequenceClassification, TrainingArguments, AutoTokenizer, Trainer
 
-from data.data_processing import get_task_dataset
+from src.data_processing import get_task_dataset
 from settings import MODELS_FOLDER
 
 
