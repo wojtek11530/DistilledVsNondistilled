@@ -69,7 +69,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
 
     y_pred = np.argmax(y_logits, axis=1)
     result_to_file(result, os.path.join(output_dir, "test_results.txt"))
-    print('\n******Classification report******\n')
+    print('\n\t**** Classification report ****\n')
     print(classification_report(y_true, y_pred))
 
 
@@ -91,7 +91,7 @@ def train_with_pytorch_loop(
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps,
                                                 num_training_steps=num_training_steps)
 
-    logger.info("***** Running training *****")
+    logger.info("\n***** Running training *****")
     logger.info("  Num examples = %d", len(train_dataset))
     logger.info("  Batch size = %d", batch_size)
     logger.info("  Num steps = %d", num_training_steps)
@@ -118,7 +118,7 @@ def train_with_pytorch_loop(
 
         avg_train_loss = tr_loss / len(train_dataloader)
 
-        logger.info("***** Running evaluation *****")
+        logger.info("\n***** Running evaluation *****")
         logger.info("  Epoch = {} iter {} step".format(epoch, global_step))
         logger.info("  Num examples = %d", len(dev_dataset))
         logger.info("  Batch size = %d", batch_size)
@@ -135,11 +135,13 @@ def train_with_pytorch_loop(
             save_model = True
 
         if save_model:
-            logger.info("***** Save model *****")
+            logger.info("\n***** Save model *****")
             model_to_save = model.module if hasattr(model, 'module') else model
             model_to_save.save_pretrained(output_dir)
             tokenizer.save_pretrained(output_dir)
             logger.info("Saving model checkpoint to %s", output_dir)
+
+        print()
 
     # ADD LOADING THE BEST MODEL
     # model = AutoModelForSequenceClassification.from_pretrained(
