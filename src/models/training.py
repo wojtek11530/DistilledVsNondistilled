@@ -14,7 +14,7 @@ from transformers import (
 
 from src.data.data_processing import Dataset, get_num_labels, get_task_dataset
 from src.models.evaluation import evaluate, compute_metrics, test_model
-from src.models.utils import result_to_file
+from src.models.utils import result_to_file, is_folder_empty
 from src.settings import MODELS_FOLDER
 
 log_format = '%(asctime)s %(message)s'
@@ -28,9 +28,7 @@ PYTORCH_LOOP_TRAINING = True
 def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, batch_size: int = 32,
                 learning_rate: float = 5e-5, weight_decay: float = 0.01, warmup_steps: int = 0,
                 max_seq_length: int = 512, do_test: bool = True):
-    output_dir = os.path.join(MODELS_FOLDER, model_name, task_name)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    output_dir = manage_output_dir(model_name, task_name)
 
     num_labels = get_num_labels(task_name)
     # output_mode = get_output_mode(task_name)
@@ -63,6 +61,20 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
 
     if do_test:
         test_model(model_name, task_name, data_dir, batch_size, max_seq_length)
+
+
+def manage_output_dir(model_name: str, task_name: str) -> str:
+    output_dir = os.path.join(MODELS_FOLDER, model_name, task_name)
+    run = 1
+    while os.path.exists(output_dir + '-run-' + str(run)):
+        if is_folder_empty(output_dir + '-run-' + str(run)):
+            logger.info('folder exist but empty, use it as output')
+            break
+        logger.info(output_dir + '-run-' + str(run) + ' exist, trying next')
+        run += 1
+    output_dir += '-run-' + str(run)
+    os.makedirs(output_dir, exist_ok=True)
+    return output_dir
 
 
 def train_with_pytorch_loop(
