@@ -47,8 +47,8 @@ def main():
                         metavar='W',
                         help='weight decay')
     parser.add_argument("--num_train_epochs",
-                        default=3.0,
-                        type=float,
+                        default=3,
+                        type=int,
                         help="Total number of training epochs to perform.")
     parser.add_argument("--warmup_steps",
                         default=0,

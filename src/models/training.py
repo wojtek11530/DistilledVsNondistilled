@@ -8,7 +8,7 @@ import torch
 
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 from torch.utils.data import DataLoader
-from tqdm.auto import trange, tqdm
+from tqdm.auto import tqdm
 from transformers import AdamW, AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup, \
     PreTrainedModel, PreTrainedTokenizerBase, Trainer, TrainingArguments
 
@@ -53,8 +53,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
 
     if PYTORCH_LOOP_TRAINING:
         train_with_pytorch_loop(model, tokenizer, train_dataset, dev_dataset,
-                                output_dir, output_mode,
-                                epochs, batch_size, learning_rate,
+                                output_dir, epochs, batch_size, learning_rate,
                                 warmup_steps, weight_decay)
     else:
         train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length,
@@ -65,16 +64,19 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     logger.info("Test dataset loaded.")
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    result, y_pred, y_true = evaluate(model, test_dataloader, output_mode)
+    logger.info("Evaluation on test dataset.")
+    result, y_logits, y_true = evaluate(model, test_dataloader)
+
+    y_pred = np.argmax(y_logits, axis=1)
     result_to_file(result, os.path.join(output_dir, "test_results.txt"))
+    print('\n******Classification report******\n')
     print(classification_report(y_true, y_pred))
 
 
 def train_with_pytorch_loop(
         model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
         train_dataset: Dataset, dev_dataset: Dataset,
-        output_dir: str, output_mode: str,
-        epochs: int, batch_size: int, learning_rate: float,
+        output_dir: str, epochs: int, batch_size: int, learning_rate: float,
         warmup_steps: int, weight_decay: float) \
         -> Tuple[int, float]:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -82,7 +84,7 @@ def train_with_pytorch_loop(
     model.to(device)
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    dev_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+    dev_dataloader = DataLoader(dev_dataset, batch_size=batch_size, shuffle=False)
     num_training_steps = epochs * len(train_dataloader)
 
     optimizer = get_optimizer(model, learning_rate, weight_decay)
@@ -100,14 +102,11 @@ def train_with_pytorch_loop(
     output_eval_file = os.path.join(output_dir, "eval_results.txt")
     model.zero_grad()
 
-    training_iterator = trange(int(epochs), desc="Epoch")
-    for epoch in training_iterator:
-        epoch_iterator = tqdm(train_dataloader, desc="Iteration")
-        for step, batch in enumerate(epoch_iterator):
-            model.train()
+    for epoch in range(int(epochs)):
+        model.train()
+        for batch in tqdm(train_dataloader, f"Epoch {epoch + 1}: "):
             batch = {k: v.to(device) for k, v in batch.items()}
             outputs = model(**batch)
-
             loss = outputs.loss
             loss.backward()
             tr_loss += loss.item()
@@ -124,15 +123,15 @@ def train_with_pytorch_loop(
         logger.info("  Num examples = %d", len(dev_dataset))
         logger.info("  Batch size = %d", batch_size)
 
-        result, _, _ = evaluate(model, dev_dataloader, output_mode)
+        result, _, _ = evaluate(model, dev_dataloader)
         result['global_step'] = global_step
         result['avg_train_loss'] = avg_train_loss
 
         result_to_file(result, output_eval_file)
 
         save_model = False
-        if result['acc'] > best_dev_acc:
-            best_dev_acc = result['acc']
+        if result['accuracy'] > best_dev_acc:
+            best_dev_acc = result['accuracy']
             save_model = True
 
         if save_model:
@@ -153,7 +152,11 @@ def train_with_pytorch_loop(
     # tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=os.path.join(MODELS_FOLDER, model_name))
 
     logger.info("Training finished.")
-    return global_step, tr_loss / global_step
+
+    if global_step > 0:
+        return global_step, tr_loss / global_step
+    else:
+        return global_step, tr_loss
 
 
 def get_optimizer(model: PreTrainedModel, learning_rate: float, weight_decay: float) -> AdamW:
@@ -168,12 +171,12 @@ def get_optimizer(model: PreTrainedModel, learning_rate: float, weight_decay: fl
     return optimizer
 
 
-def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader, output_mode: str) \
+def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader) \
         -> Tuple[dict, np.ndarray, np.ndarray]:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     eval_loss = 0.0
     nb_eval_steps = 0
-    preds = None
+    all_logits = None
     out_label_ids = None
     for batch in tqdm(eval_dataloader, desc="Evaluating"):
         model.eval()
@@ -187,22 +190,18 @@ def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader, output_mode: s
         eval_loss += tmp_eval_loss.mean().item()
 
         nb_eval_steps += 1
-        if preds is None:
-            preds = logits.detach().cpu().numpy()
+        if all_logits is None:
+            all_logits = logits.detach().cpu().numpy()
             out_label_ids = batch['labels'].detach().cpu().numpy()
         else:
-            preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
+            all_logits = np.append(all_logits, logits.detach().cpu().numpy(), axis=0)
             out_label_ids = np.append(out_label_ids, batch['labels'].detach().cpu().numpy(), axis=0)
 
     eval_loss = eval_loss / nb_eval_steps
-    if output_mode == "classification":
-        preds = np.argmax(preds, axis=1)
-    elif output_mode == "regression":
-        preds = np.squeeze(preds)
 
-    results = compute_metrics((preds, out_label_ids))
+    results = compute_metrics((all_logits, out_label_ids))
     results['eval_loss'] = eval_loss
-    return results, preds, out_label_ids
+    return results, all_logits, out_label_ids
 
 
 def result_to_file(result: dict, file_name: str) -> None:
@@ -243,9 +242,9 @@ def train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate,
 
 
 def compute_metrics(eval_pred):
-    pred, labels = eval_pred
-    pred = np.argmax(pred, axis=1)
+    logits, labels = eval_pred
+    preds = np.argmax(logits, axis=1)
 
-    accuracy = accuracy_score(y_true=labels, y_pred=pred)
-    f1 = f1_score(y_true=labels, y_pred=pred)
+    accuracy = accuracy_score(y_true=labels, y_pred=preds)
+    f1 = f1_score(y_true=labels, y_pred=preds, average='macro')
     return {"accuracy": accuracy, "f1": f1}
