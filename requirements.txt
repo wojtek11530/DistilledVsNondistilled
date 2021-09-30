@@ -8,10 +8,11 @@ tox
 
 ### Project packages ###
 matplotlib
-numpy
+numpy~=1.20.0
 pandas
-requests
-scikit-learn
+requests~=2.25.1
+scikit-learn~=0.24.1
 seaborn
 torch
-transformers
+tqdm
+transformers~=4.6.1

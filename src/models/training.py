@@ -12,8 +12,8 @@ from tqdm.auto import trange, tqdm
 from transformers import AdamW, AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup, \
     PreTrainedModel, PreTrainedTokenizerBase, Trainer, TrainingArguments
 
-from src.data_processing import Dataset, get_num_labels, get_output_mode, get_task_dataset
-from settings import MODELS_FOLDER
+from src.data.data_processing import Dataset, get_num_labels, get_output_mode, get_task_dataset
+from src.settings import MODELS_FOLDER
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
