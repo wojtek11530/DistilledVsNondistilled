@@ -17,14 +17,18 @@ from settings import MODELS_FOLDER
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-                    format=log_format, datefmt='%m/%d %I:%M:%S %p')
+                    format=log_format, datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
+
+PYTORCH_LOOP_TRAINING = True
 
 
 def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, batch_size: int = 32,
                 learning_rate: float = 5e-5, weight_decay: float = 0.01, warmup_steps: int = 0,
                 max_seq_length: int = 512):
     output_dir = os.path.join(MODELS_FOLDER, model_name, task_name)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     num_labels = get_num_labels(task_name)
     output_mode = get_output_mode(task_name)
@@ -47,13 +51,14 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
                                    raw_data_dir=data_dir, max_seq_length=max_seq_length)
     logger.info("Dev dataset loaded.")
 
-    train_with_pytorch_loop(model, tokenizer, train_dataset, dev_dataset,
-                            output_dir, output_mode,
-                            epochs, batch_size, learning_rate,
-                            warmup_steps, weight_decay)
-
-    # train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length,
-    # model, task_name, output_dir, tokenizer, train_dataset, warmup_steps, weight_decay)
+    if PYTORCH_LOOP_TRAINING:
+        train_with_pytorch_loop(model, tokenizer, train_dataset, dev_dataset,
+                                output_dir, output_mode,
+                                epochs, batch_size, learning_rate,
+                                warmup_steps, weight_decay)
+    else:
+        train_with_trainer(batch_size, data_dir, dev_dataset, epochs, learning_rate, max_seq_length,
+                           model, task_name, output_dir, tokenizer, train_dataset, warmup_steps, weight_decay)
 
     test_dataset = get_task_dataset(task_name, set_name='test', tokenizer=tokenizer,
                                     raw_data_dir=data_dir, max_seq_length=max_seq_length)
@@ -65,12 +70,13 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     print(classification_report(y_true, y_pred))
 
 
-def train_with_pytorch_loop(model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
-                            train_dataset: Dataset, dev_dataset: Dataset,
-                            output_dir: str, output_mode: str,
-                            epochs: int, batch_size: int, learning_rate: float,
-                            warmup_steps: int, weight_decay: float) -> Tuple[int, float]:
-
+def train_with_pytorch_loop(
+        model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
+        train_dataset: Dataset, dev_dataset: Dataset,
+        output_dir: str, output_mode: str,
+        epochs: int, batch_size: int, learning_rate: float,
+        warmup_steps: int, weight_decay: float) \
+        -> Tuple[int, float]:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info("device: {}".format(device))
     model.to(device)
@@ -131,12 +137,20 @@ def train_with_pytorch_loop(model: PreTrainedModel, tokenizer: PreTrainedTokeniz
 
         if save_model:
             logger.info("***** Save model *****")
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir)
             model_to_save = model.module if hasattr(model, 'module') else model
             model_to_save.save_pretrained(output_dir)
             tokenizer.save_pretrained(output_dir)
             logger.info("Saving model checkpoint to %s", output_dir)
+
+    # ADD LOADING THE BEST MODEL
+    # model = AutoModelForSequenceClassification.from_pretrained(
+    #     model_name,
+    #     num_labels=num_labels,
+    #     cache_dir=os.path.join(MODELS_FOLDER, model_name)
+    # )
+    # logger.info(f"Model {model_name} loaded.")
+    #
+    # tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=os.path.join(MODELS_FOLDER, model_name))
 
     logger.info("Training finished.")
     return global_step, tr_loss / global_step
