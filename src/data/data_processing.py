@@ -3,7 +3,7 @@ import os
 from typing import List, Optional, Union
 
 import torch
-from torch.utils.data import DataLoader
+import torch.utils.data
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 logger = logging.getLogger(__name__)
@@ -97,14 +97,13 @@ class MultiemoProcessor(DataProcessor):
         return examples
 
 
-# Create torch dataset
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, encodings: BatchEncoding, labels: Optional[torch.Tensor] = None):
         self.inputs = encodings
         self.n_examples = len(self.inputs['input_ids'])
         self.sequence_len = self.inputs['input_ids'].shape[-1]
-        if labels:
-            self.inputs.update({'labels': torch.tensor(labels)})
+        if labels is not None:
+            self.inputs.update({'labels': labels})
 
     def __getitem__(self, idx: int):
         return {key: self.inputs[key][idx] for key in self.inputs.keys()}
@@ -122,34 +121,23 @@ output_modes = {
 }
 
 
-def get_task_dataloader(task_name: str, set_name: str, tokenizer: PreTrainedTokenizerBase,
-                        raw_data_dir: str, batch_size: int, max_seq_length: Optional[int] = None) -> DataLoader:
-    if 'multiemo' in task_name:
-        _, lang, domain, kind = task_name.split('_')
-        processor = MultiemoProcessor(lang, domain, kind)
-    else:
-        if task_name not in processors:
-            raise ValueError("Task not found: %s" % task_name)
-        else:
-            processor = processors[task_name]()
+def get_num_labels(task_name: str) -> int:
+    processor = get_task_processor(task_name)
+    label_list = processor.get_labels()
+    num_labels = len(label_list)
+    return num_labels
 
-    if 'multiemo' in task_name:
-        output_mode = output_modes['multiemo']
-    else:
-        output_mode = output_modes[task_name]
+
+def get_task_dataset(task_name: str, set_name: str, tokenizer: PreTrainedTokenizerBase,
+                     raw_data_dir: str, max_seq_length: Optional[int] = None) -> Dataset:
+    processor = get_task_processor(task_name)
+    output_mode = get_output_mode(task_name)
+
+    examples = get_examples_from_dataset(processor, raw_data_dir, set_name)
 
     label_list = processor.get_labels()
-    if set_name.lower() == 'train':
-        examples = processor.get_train_examples(raw_data_dir)
-    elif set_name.lower() == 'dev':
-        examples = processor.get_dev_examples(raw_data_dir)
-    elif set_name.lower() == 'test':
-        examples = processor.get_test_examples(raw_data_dir)
-    else:
-        raise ValueError(
-            '{} as set name not available for now, use \'train\', \'dev\' or \'test\' instead'.format(set_name))
-
     label_map = {label: i for i, label in enumerate(label_list)}
+
     texts_a = []
     texts_b = []
     label_ids = []
@@ -175,9 +163,42 @@ def get_task_dataloader(task_name: str, set_name: str, tokenizer: PreTrainedToke
         all_label_ids = torch.tensor(label_ids, dtype=torch.float)
 
     dataset = Dataset(text_tokenized, all_label_ids)
-    dataloader = DataLoader(dataset, batch_size=batch_size,
-                            shuffle=True if set_name != 'test' else False)
-    return dataloader
+    # dataloader = DataLoader(dataset, batch_size=batch_size,
+    #                         shuffle=True if set_name != 'test' else False)
+    return dataset  # , dataloader
+
+
+def get_examples_from_dataset(processor, raw_data_dir, set_name):
+    if set_name.lower() == 'train':
+        examples = processor.get_train_examples(raw_data_dir)
+    elif set_name.lower() == 'dev':
+        examples = processor.get_dev_examples(raw_data_dir)
+    elif set_name.lower() == 'test':
+        examples = processor.get_test_examples(raw_data_dir)
+    else:
+        raise ValueError(
+            '{} as set name not available for now, use \'train\', \'dev\' or \'test\' instead'.format(set_name))
+    return examples
+
+
+def get_output_mode(task_name: str) -> str:
+    if 'multiemo' in task_name:
+        output_mode = output_modes['multiemo']
+    else:
+        output_mode = output_modes[task_name]
+    return output_mode
+
+
+def get_task_processor(task_name: str) -> DataProcessor:
+    if 'multiemo' in task_name:
+        _, lang, domain, kind = task_name.split('_')
+        processor = MultiemoProcessor(lang, domain, kind)
+    else:
+        if task_name not in processors:
+            raise ValueError("Task not found: %s" % task_name)
+        else:
+            processor = processors[task_name]()
+    return processor
 
 
 def _get_label_id(example: InputExample, label_map: dict, output_mode: str) -> Union[int, float]:
