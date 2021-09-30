@@ -141,7 +141,7 @@ def train_with_pytorch_loop(
         logger.info("  Num examples = %d", len(dev_dataset))
         logger.info("  Batch size = %d", batch_size)
 
-        result, _, _ = evaluate(model, dev_dataloader)
+        result, _, _ = evaluate(model, dev_dataloader, device)
         result['global_step'] = global_step
         result['avg_train_loss'] = avg_train_loss
 

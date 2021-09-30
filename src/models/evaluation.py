@@ -34,6 +34,9 @@ def test_model(model_name: str, task_name: str, data_dir: str, batch_size: int =
         output_dir,
         num_labels=num_labels
     )
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
     tokenizer = AutoTokenizer.from_pretrained(output_dir)
     logger.info(f"Best model from {output_dir} loaded.")
 
@@ -47,7 +50,7 @@ def test_model(model_name: str, task_name: str, data_dir: str, batch_size: int =
     logger.info("  Batch size = %d", batch_size)
 
     eval_start_time = time.monotonic()
-    result, y_logits, y_true = evaluate(model, test_dataloader)
+    result, y_logits, y_true = evaluate(model, test_dataloader, device)
     eval_end_time = time.monotonic()
 
     diff = timedelta(seconds=eval_start_time - eval_end_time)
@@ -64,9 +67,8 @@ def test_model(model_name: str, task_name: str, data_dir: str, batch_size: int =
     dictionary_to_json(report, os.path.join(output_dir, "test_results.json"))
 
 
-def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader) \
+def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader, device: torch.device) \
         -> Tuple[Dict[Any, Any], np.ndarray, np.ndarray]:
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     eval_loss = 0.0
     nb_eval_steps = 0
     all_logits = None
