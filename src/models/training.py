@@ -74,7 +74,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     dictionary_to_json(training_parameters, output_training_params_file)
 
     if do_test:
-        test_model(model_name, task_name, data_dir, batch_size, max_seq_length)
+        test_model(output_dir, task_name, data_dir, batch_size, max_seq_length)
 
 
 def manage_output_dir(model_name: str, task_name: str) -> str:

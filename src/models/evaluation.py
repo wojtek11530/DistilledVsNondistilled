@@ -22,23 +22,19 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 
-def test_model(model_name: str, task_name: str, data_dir: str, batch_size: int = 32, max_seq_length: int = 512):
-    output_dir = os.path.join(MODELS_FOLDER, model_name, task_name)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
+def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 32, max_seq_length: int = 512):
     num_labels = get_num_labels(task_name)
 
     # LOADING THE BEST MODEL
     model = AutoModelForSequenceClassification.from_pretrained(
-        output_dir,
+        model_dir,
         num_labels=num_labels
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    tokenizer = AutoTokenizer.from_pretrained(output_dir)
-    logger.info(f"Best model from {output_dir} loaded.")
+    tokenizer = AutoTokenizer.from_pretrained(model_dir)
+    logger.info(f"Best model from {model_dir} loaded.")
 
     test_dataset = get_task_dataset(task_name, set_name='test', tokenizer=tokenizer,
                                     raw_data_dir=data_dir, max_seq_length=max_seq_length)
