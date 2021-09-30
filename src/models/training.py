@@ -14,7 +14,7 @@ from transformers import (
 
 from src.data.data_processing import Dataset, get_num_labels, get_task_dataset
 from src.models.evaluation import evaluate, compute_metrics, test_model
-from src.models.utils import result_to_file, is_folder_empty
+from src.models.utils import result_to_textfile, is_folder_empty, dictionary_to_json
 from src.settings import MODELS_FOLDER
 
 log_format = '%(asctime)s %(message)s'
@@ -33,7 +33,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
                            'max_seq_length': max_seq_length}
 
     output_dir = manage_output_dir(model_name, task_name)
-    output_training_params_file = os.path.join(output_dir, "training_params.txt")
+    output_training_params_file = os.path.join(output_dir, "training_params.json")
 
     num_labels = get_num_labels(task_name)
     # output_mode = get_output_mode(task_name)
@@ -57,7 +57,6 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     logger.info("Dev dataset loaded.")
 
     training_start_time = time.monotonic()
-
     if PYTORCH_LOOP_TRAINING:
         train_with_pytorch_loop(model, tokenizer, train_dataset, dev_dataset,
                                 output_dir, epochs, batch_size, learning_rate,
@@ -72,7 +71,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     diff_seconds = int(diff.total_seconds())
     training_parameters['training_time'] = diff_seconds
 
-    result_to_file(training_parameters, output_training_params_file, False)
+    dictionary_to_json(training_parameters, output_training_params_file)
 
     if do_test:
         test_model(model_name, task_name, data_dir, batch_size, max_seq_length)
@@ -146,7 +145,7 @@ def train_with_pytorch_loop(
         result['global_step'] = global_step
         result['avg_train_loss'] = avg_train_loss
 
-        result_to_file(result, output_eval_file)
+        result_to_textfile(result, output_eval_file)
 
         save_model = False
         if result['accuracy'] > best_dev_acc:
