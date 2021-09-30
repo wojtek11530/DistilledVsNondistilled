@@ -3,7 +3,7 @@ import os
 from typing import List, Optional, Union
 
 import torch
-from torch.utils.data import DataLoader
+import torch.utils.data
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 logger = logging.getLogger(__name__)

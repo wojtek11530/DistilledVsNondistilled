@@ -1,6 +1,5 @@
 import argparse
 import logging
-
 import sys
 
 from src.models.training import train_model

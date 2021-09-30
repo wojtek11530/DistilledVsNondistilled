@@ -1,18 +1,18 @@
 import logging
 import os
 import sys
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 import numpy as np
 import torch
-
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 from torch.utils.data import DataLoader
-from tqdm.auto import tqdm
-from transformers import AdamW, AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup, \
-    PreTrainedModel, PreTrainedTokenizerBase, Trainer, TrainingArguments
+from tqdm.auto import tqdm, trange
+from transformers import (
+    AdamW, AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel, PreTrainedTokenizerBase, Trainer,
+    TrainingArguments, get_linear_schedule_with_warmup)
 
-from src.data.data_processing import Dataset, get_num_labels, get_output_mode, get_task_dataset
+from src.data.data_processing import Dataset, get_num_labels, get_task_dataset
 from src.settings import MODELS_FOLDER
 
 log_format = '%(asctime)s %(message)s'
@@ -31,7 +31,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
         os.makedirs(output_dir)
 
     num_labels = get_num_labels(task_name)
-    output_mode = get_output_mode(task_name)
+    # output_mode = get_output_mode(task_name)
 
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
@@ -102,7 +102,7 @@ def train_with_pytorch_loop(
     output_eval_file = os.path.join(output_dir, "eval_results.txt")
     model.zero_grad()
 
-    for epoch in range(int(epochs)):
+    for epoch in trange(int(epochs)):
         model.train()
         for batch in tqdm(train_dataloader, f"Epoch {epoch + 1}: "):
             batch = {k: v.to(device) for k, v in batch.items()}
@@ -172,7 +172,7 @@ def get_optimizer(model: PreTrainedModel, learning_rate: float, weight_decay: fl
 
 
 def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader) \
-        -> Tuple[dict, np.ndarray, np.ndarray]:
+        -> Tuple[Dict[Any, Any], np.ndarray, np.ndarray]:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     eval_loss = 0.0
     nb_eval_steps = 0
