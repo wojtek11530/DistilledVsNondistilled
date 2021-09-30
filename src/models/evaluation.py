@@ -13,7 +13,7 @@ from tqdm.auto import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel
 
 from src.data.data_processing import get_num_labels, get_task_dataset
-from src.models.utils import result_to_textfile, dictionary_to_json
+from src.models.utils import result_to_text_file, dictionary_to_json
 from src.settings import MODELS_FOLDER
 
 log_format = '%(asctime)s %(message)s'
@@ -50,9 +50,9 @@ def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 
     eval_end_time = time.monotonic()
 
     diff = timedelta(seconds=eval_end_time - eval_start_time)
-    diff_seconds = int(diff.total_seconds())
+    diff_seconds = diff.total_seconds()
     result['eval_time'] = diff_seconds
-    result_to_textfile(result, os.path.join(output_dir, "test_results.txt"))
+    result_to_text_file(result, os.path.join(model_dir, "test_results.txt"))
 
     y_pred = np.argmax(y_logits, axis=1)
     print('\n\t**** Classification report ****\n')
@@ -60,7 +60,7 @@ def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 
 
     report = classification_report(y_true, y_pred, output_dict=True)
     report['eval_time'] = diff_seconds
-    dictionary_to_json(report, os.path.join(output_dir, "test_results.json"))
+    dictionary_to_json(report, os.path.join(model_dir, "test_results.json"))
 
 
 def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader, device: torch.device) \

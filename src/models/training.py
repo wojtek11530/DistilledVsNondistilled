@@ -14,7 +14,7 @@ from transformers import (
 
 from src.data.data_processing import Dataset, get_num_labels, get_task_dataset
 from src.models.evaluation import evaluate, compute_metrics, test_model
-from src.models.utils import result_to_textfile, is_folder_empty, dictionary_to_json
+from src.models.utils import result_to_text_file, is_folder_empty, dictionary_to_json
 from src.settings import MODELS_FOLDER
 
 log_format = '%(asctime)s %(message)s'
@@ -68,7 +68,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     training_end_time = time.monotonic()
 
     diff = timedelta(seconds=training_end_time - training_start_time)
-    diff_seconds = int(diff.total_seconds())
+    diff_seconds = diff.total_seconds()
     training_parameters['training_time'] = diff_seconds
 
     dictionary_to_json(training_parameters, output_training_params_file)
@@ -145,7 +145,7 @@ def train_with_pytorch_loop(
         result['global_step'] = global_step
         result['avg_train_loss'] = avg_train_loss
 
-        result_to_textfile(result, output_eval_file)
+        result_to_text_file(result, output_eval_file)
 
         save_model = False
         if result['accuracy'] > best_dev_acc:
