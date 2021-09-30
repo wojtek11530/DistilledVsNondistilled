@@ -53,7 +53,7 @@ def test_model(model_name: str, task_name: str, data_dir: str, batch_size: int =
     result, y_logits, y_true = evaluate(model, test_dataloader, device)
     eval_end_time = time.monotonic()
 
-    diff = timedelta(seconds=eval_start_time - eval_end_time)
+    diff = timedelta(seconds=eval_end_time - eval_start_time)
     diff_seconds = int(diff.total_seconds())
     result['eval_time'] = diff_seconds
     result_to_textfile(result, os.path.join(output_dir, "test_results.txt"))
