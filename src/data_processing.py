@@ -121,6 +121,13 @@ output_modes = {
 }
 
 
+def get_num_labels(task_name: str) -> int:
+    processor = get_task_processor(task_name)
+    label_list = processor.get_labels()
+    num_labels = len(label_list)
+    return num_labels
+
+
 def get_task_dataset(task_name: str, set_name: str, tokenizer: PreTrainedTokenizerBase,
                      raw_data_dir: str, max_seq_length: Optional[int] = None) -> Dataset:
     processor = get_task_processor(task_name)
