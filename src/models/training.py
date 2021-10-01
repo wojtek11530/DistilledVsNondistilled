@@ -13,9 +13,9 @@ from transformers import (
     TrainingArguments, get_linear_schedule_with_warmup)
 
 from src.data.data_processing import Dataset, get_num_labels, get_task_dataset
-from src.models.evaluation import evaluate, compute_metrics, test_model
-from src.utils import result_to_text_file, is_folder_empty, dictionary_to_json
+from src.models.evaluation import compute_metrics, evaluate, test_model
 from src.settings import MODELS_FOLDER
+from src.utils import dictionary_to_json, is_folder_empty, result_to_text_file
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
