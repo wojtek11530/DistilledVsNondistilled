@@ -3,18 +3,17 @@ import os
 import sys
 import time
 from datetime import timedelta
-from typing import Tuple, Dict, Any
+from typing import Any, Dict, Tuple
 
 import numpy as np
 import torch
-from sklearn.metrics import classification_report, accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, classification_report, f1_score
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel
 
 from src.data.data_processing import get_num_labels, get_task_dataset
-from src.models.utils import result_to_text_file, dictionary_to_json
-from src.settings import MODELS_FOLDER
+from src.utils import dictionary_to_json, result_to_text_file
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
