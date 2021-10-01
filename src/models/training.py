@@ -7,7 +7,7 @@ from typing import Tuple
 
 import torch
 from torch.utils.data import DataLoader
-from tqdm.auto import tqdm, trange
+from tqdm.auto import tqdm
 from transformers import (
     AdamW, AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel, PreTrainedTokenizerBase, Trainer,
     TrainingArguments, get_linear_schedule_with_warmup)
@@ -120,7 +120,7 @@ def train_with_pytorch_loop(
     output_eval_file = os.path.join(output_dir, "eval_results.txt")
     model.zero_grad()
 
-    for epoch in trange(int(epochs)):
+    for epoch in range(int(epochs)):
         model.train()
         for batch in tqdm(train_dataloader, f"Epoch {epoch + 1}: "):
             batch = {k: v.to(device) for k, v in batch.items()}
