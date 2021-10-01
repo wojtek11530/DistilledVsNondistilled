@@ -14,7 +14,7 @@ from transformers import (
 
 from src.data.data_processing import Dataset, get_num_labels, get_task_dataset
 from src.models.evaluation import evaluate, compute_metrics, test_model
-from src.models.utils import result_to_text_file, is_folder_empty, dictionary_to_json
+from src.utils import result_to_text_file, is_folder_empty, dictionary_to_json
 from src.settings import MODELS_FOLDER
 
 log_format = '%(asctime)s %(message)s'

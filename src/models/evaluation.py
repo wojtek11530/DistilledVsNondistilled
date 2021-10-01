@@ -13,8 +13,7 @@ from tqdm.auto import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel
 
 from src.data.data_processing import get_num_labels, get_task_dataset
-from src.models.utils import result_to_text_file, dictionary_to_json
-from src.settings import MODELS_FOLDER
+from src.utils import result_to_text_file, dictionary_to_json
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,

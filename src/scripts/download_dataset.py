@@ -4,7 +4,7 @@ import zipfile
 import requests
 from tqdm.auto import tqdm
 
-from settings import DATA_FOLDER
+from src.settings import DATA_FOLDER
 
 # url = 'https://clarin-pl.eu/dspace/bitstream/handle/11321/798/multiemo.zip?sequence=2&isAllowed=y'
 url = 'https://clarin-pl.eu/dspace/handle/11321/798/allzip'
