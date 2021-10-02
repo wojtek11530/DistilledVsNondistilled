@@ -81,9 +81,9 @@ class MultiemoProcessor(DataProcessor):
     def get_labels(self) -> List[str]:
         """See base class."""
         if self.kind == 'text':
-            return ["__label__meta_amb", "__label__meta_minus_m", "__label__meta_plus_m", "__label__meta_zero"]
+            return ["meta_amb", "meta_minus_m", "meta_plus_m", "meta_zero"]
         else:
-            return ["__label__z_amb", "__label__z_minus_m", "__label__z_plus_m", "__label__z_zero"]
+            return ["z_amb", "z_minus_m", "z_plus_m", "z_zero"]
 
     def _create_examples(self, lines: List[str], set_type: str) -> List[InputExample]:
         examples = []
@@ -91,7 +91,7 @@ class MultiemoProcessor(DataProcessor):
             guid = "%s-%s" % (set_type, i)
             split_line = line.split('__label__')
             text_a = split_line[0]
-            label = '__label__' + split_line[1]
+            label = split_line[1]
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
         return examples
