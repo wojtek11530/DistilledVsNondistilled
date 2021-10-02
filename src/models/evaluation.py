@@ -56,9 +56,9 @@ def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 
 
     y_pred = np.argmax(y_logits, axis=1)
     print('\n\t**** Classification report ****\n')
-    print(classification_report(y_true, y_pred, labels=labels_list))
+    print(classification_report(y_true, y_pred, target_names=labels_list))
 
-    report = classification_report(y_true, y_pred, labels=labels_list, output_dict=True)
+    report = classification_report(y_true, y_pred, target_names=labels_list, output_dict=True)
     report['eval_time'] = diff_seconds
     dictionary_to_json(report, os.path.join(model_dir, "test_results.json"))
 
