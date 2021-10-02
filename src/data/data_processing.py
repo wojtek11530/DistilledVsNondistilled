@@ -128,6 +128,11 @@ def get_num_labels(task_name: str) -> int:
     return num_labels
 
 
+def get_labels(task_name: str) -> List[str]:
+    processor = get_task_processor(task_name)
+    return processor.get_labels()
+
+
 def get_task_dataset(task_name: str, set_name: str, tokenizer: PreTrainedTokenizerBase,
                      raw_data_dir: str, max_seq_length: Optional[int] = None) -> Dataset:
     processor = get_task_processor(task_name)
