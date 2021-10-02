@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel
 
-from src.data.data_processing import get_num_labels, get_task_dataset
+from src.data.data_processing import get_num_labels, get_task_dataset, get_labels
 from src.utils import dictionary_to_json, result_to_text_file
 
 log_format = '%(asctime)s %(message)s'
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 32, max_seq_length: int = 512):
     num_labels = get_num_labels(task_name)
+    labels_list = get_labels(task_name)
 
     # LOADING THE BEST MODEL
     model = AutoModelForSequenceClassification.from_pretrained(
@@ -55,9 +56,9 @@ def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 
 
     y_pred = np.argmax(y_logits, axis=1)
     print('\n\t**** Classification report ****\n')
-    print(classification_report(y_true, y_pred))
+    print(classification_report(y_true, y_pred, target_names=labels_list))
 
-    report = classification_report(y_true, y_pred, output_dict=True)
+    report = classification_report(y_true, y_pred, target_names=labels_list, output_dict=True)
     report['eval_time'] = diff_seconds
     dictionary_to_json(report, os.path.join(model_dir, "test_results.json"))
 
