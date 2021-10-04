@@ -25,8 +25,7 @@ def main():
 
 
 def get_immediate_subdirectories(dir: str):
-    return [name for name in os.listdir(dir)
-            if os.path.isdir(os.path.join(dir, name))]
+    return [os.path.join(dir, name) for name in os.listdir(dir) if os.path.isdir(os.path.join(dir, name))]
 
 
 def gather_results(task_models_directory):
