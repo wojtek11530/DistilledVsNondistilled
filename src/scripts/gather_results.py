@@ -30,6 +30,9 @@ def main():
                 data.append(data_dict)
 
     df = pd.DataFrame(data)
+    cols = df.columns.tolist()
+    cols = cols[-1:] + cols[:-1]
+    df = df[cols]
     df.to_csv(os.path.join(DATA_FOLDER, 'results-' + task_name + '.csv'), index=False)
 
 
