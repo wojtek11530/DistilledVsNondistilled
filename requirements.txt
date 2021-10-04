@@ -1,15 +1,9 @@
 ### Development tools ###
-pytest
-pytest-flakes
-pytest-isort
-pytest-mypy
-pytest-pycodestyle
-tox
 
 ### Project packages ###
 numpy~=1.20.0
+pandas~=1.2.4
 requests~=2.25.1
 scikit-learn~=0.24.1
-torch
 tqdm~=4.59.0
 transformers~=4.6.1
