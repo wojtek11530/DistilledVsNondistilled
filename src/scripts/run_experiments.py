@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 
 from src.settings import DATA_FOLDER, PROJECT_FOLDER
 
