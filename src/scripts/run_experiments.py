@@ -40,7 +40,7 @@ def main():
 
     for task, models in tasks_to_models.items():
         for model in models:
-            cmd = 'python3 -m src.scripts.run_training'
+            cmd = 'python3 -m src.scripts.run_training '
             options = [
                 '--model_name', model,
                 '--data_dir', data_dir,
