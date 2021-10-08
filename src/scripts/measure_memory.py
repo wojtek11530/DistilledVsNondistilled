@@ -3,6 +3,7 @@ import json
 import os
 from typing import Any, Dict
 
+import GPUtil
 import pandas as pd
 import torch
 from transformers import AutoModelForSequenceClassification
@@ -43,7 +44,9 @@ def main():
         print('Allocated:', round(torch.cuda.memory_allocated(device) / 1024 ** 2, 1), 'MB')
         print('Cached:   ', round(torch.cuda.memory_reserved(device) / 1024 ** 2, 1), 'MB')
 
-    print(torch.cuda.memory_summary())
+        GPUs = GPUtil.getGPUs()
+        used_gpu = GPUs[torch.cuda.current_device()]
+        print('Used:', used_gpu.memoryUsed)
 
     input("Press Enter to continue...")
 
