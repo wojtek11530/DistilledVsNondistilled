@@ -3,6 +3,7 @@ import json
 import os
 from typing import Any, Dict
 
+import GPUtil
 import pandas as pd
 import torch
 from transformers import AutoModelForSequenceClassification
@@ -69,7 +70,10 @@ def gather_results(ft_model_dir: str, task_name: str) -> Dict[str, Any]:
     torch.cuda.empty_cache()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    data['memory_allocated'] = torch.cuda.memory_allocated(device)
+
+    if device.type == 'cuda':
+        current_gpu = GPUtil.getGPUs()[torch.cuda.current_device()]
+        data['gpu_memory_used'] = current_gpu.memoryUsed
 
     parameters_num = 0
     for n, p in model.named_parameters():
