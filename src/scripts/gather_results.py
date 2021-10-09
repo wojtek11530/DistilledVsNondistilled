@@ -75,6 +75,12 @@ def gather_results(ft_model_dir: str, task_name: str) -> Dict[str, Any]:
         current_gpu = GPUtil.getGPUs()[torch.cuda.current_device()]
         data['gpu_memory_used'] = current_gpu.memoryUsed
 
+    memory_params = sum([param.nelement() * param.element_size() for param in model.parameters()])
+    memory_buffers = sum([buf.nelement() * buf.element_size() for buf in model.buffers()])
+    memory_used = memory_params + memory_buffers  # in bytes
+
+    data['memory'] = memory_used
+
     parameters_num = 0
     for n, p in model.named_parameters():
         parameters_num += p.nelement()
