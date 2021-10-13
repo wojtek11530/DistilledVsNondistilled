@@ -35,7 +35,7 @@ def main():
     cols = df.columns.tolist()
     cols = cols[-1:] + cols[:-1]
     df = df[cols]
-    df.to_csv(os.path.join(DATA_FOLDER, 'results-' + task_name + '.csv'), index=False)
+    df.to_csv(os.path.join(DATA_FOLDER, 'fasttext_results-' + task_name + '.csv'), index=False)
 
 
 def gather_results(ft_model_dir: str) -> Dict[str, Any]:
