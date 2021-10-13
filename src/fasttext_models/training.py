@@ -75,6 +75,7 @@ def quantize_fasttext_model(model, model_name: str, task_name: str,
     diff = timedelta(seconds=quantization_end_time - quantization_start_time)
     quantization_duration = diff.total_seconds()
 
+    model_name += '.quant'
     quantization_parameters = {'model_name': model_name, 'task_name': task_name,
                                'training_time': training_duration + quantization_duration}
     output_quantization_params_file = os.path.join(output_dir, "training_params.json")
