@@ -32,3 +32,8 @@ def is_folder_empty(folder_name: str):
         return True
     else:
         return False
+
+
+def get_immediate_subdirectories(directory: str):
+    return [os.path.join(directory, name) for name in os.listdir(directory)
+            if os.path.isdir(os.path.join(directory, name))]

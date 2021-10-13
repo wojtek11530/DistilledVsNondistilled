@@ -36,7 +36,7 @@ def main():
         logger.info("Downloading finished")
 
     for task, model in tasks_to_model.items():
-        cmd = 'src.scripts.run_fasttext_training  '
+        cmd = 'python3 -m src.scripts.run_fasttext_training '
         options = [
             '--model_name', model,
             '--data_dir', data_dir,
