@@ -39,6 +39,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, dim: int = 300, 
 
 def train_fastext_model(model_name: str, task_name: str, output_dir: str,
                         dim: int, train_set_dir: str, dev_set_dir: str):
+    logger.info("\n***** Running training *****")
     model_vec_file = os.path.join(MODELS_FOLDER, 'fasttext', model_name + '.vec')
     # Training
     training_start_time = time.monotonic()
@@ -46,7 +47,9 @@ def train_fastext_model(model_name: str, task_name: str, output_dir: str,
                                       autotuneValidationFile=dev_set_dir)
     training_end_time = time.monotonic()
     # Saving model
+    logger.info(f"Saving model in {output_dir}")
     model.save_model(os.path.join(output_dir, 'model.bin'))
+    logger.info("Model saved")
 
     diff = timedelta(seconds=training_end_time - training_start_time)
     training_duration = diff.total_seconds()
@@ -60,11 +63,14 @@ def train_fastext_model(model_name: str, task_name: str, output_dir: str,
 def quantize_fasttext_model(model, model_name: str, task_name: str,
                             output_dir: str, train_set_dir: str, training_duration: float):
     # Quantization process
+    logger.info("\n***** Running quantization *****")
     quantization_start_time = time.monotonic()
     model = model.quantize(input=train_set_dir, retrain=True)
     quantization_end_time = time.monotonic()
     # Saving model
+    logger.info(f"Saving quantized model in {output_dir}")
     model.save_model(os.path.join(output_dir, 'model.bin'))
+    logger.info("Quantized model saved")
 
     diff = timedelta(seconds=quantization_end_time - quantization_start_time)
     quantization_duration = diff.total_seconds()
