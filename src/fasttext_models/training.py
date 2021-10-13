@@ -3,7 +3,6 @@ import os
 import sys
 import time
 from datetime import timedelta
-from typing import Tuple
 
 import fasttext
 
@@ -24,8 +23,8 @@ def train_model(model_name: str, task_name: str, data_dir: str, dim: int = 300, 
     output_dir = manage_output_dir(model_name, task_name)
     output_dir_quantized = manage_output_dir(model_name, task_name, quantized=True)
 
-    train_set_dir = get_task_dataset_dir(task_name, data_dir, 'train')
-    dev_set_dir = get_task_dataset_dir(task_name, data_dir, 'dev')
+    train_set_dir = get_task_dataset_dir(task_name, 'train', data_dir)
+    dev_set_dir = get_task_dataset_dir(task_name, 'dev', data_dir)
 
     # Training FT model
     model, training_duration = train_fastext_model(model_name, task_name, output_dir, dim, train_set_dir, dev_set_dir)
@@ -39,7 +38,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, dim: int = 300, 
 
 
 def train_fastext_model(model_name: str, task_name: str, output_dir: str,
-                        dim: int, train_set_dir: str, dev_set_dir: str) -> Tuple[fasttext.FastText, float]:
+                        dim: int, train_set_dir: str, dev_set_dir: str):
     model_vec_file = os.path.join(MODELS_FOLDER, 'fasttext', model_name + '.vec')
     # Training
     training_start_time = time.monotonic()
@@ -58,7 +57,7 @@ def train_fastext_model(model_name: str, task_name: str, output_dir: str,
     return model, training_duration
 
 
-def quantize_fasttext_model(model: fasttext.FastText, model_name: str, task_name: str,
+def quantize_fasttext_model(model, model_name: str, task_name: str,
                             output_dir: str, train_set_dir: str, training_duration: float):
     # Quantization process
     quantization_start_time = time.monotonic()

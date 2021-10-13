@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_model(model_dir: str, task_name: str, data_dir: str):
-    test_set_dir = get_task_dataset_dir(task_name, data_dir, 'test')
+    test_set_dir = get_task_dataset_dir(task_name, 'test', data_dir)
     texts, true_labels = extract_texts_and_labels(test_set_dir)
 
     # Loading model
