@@ -24,7 +24,7 @@ def test_model(model_dir: str, task_name: str, data_dir: str):
     # Loading model
     model_path = os.path.join(model_dir, 'model.bin')
     model = fasttext.load_model(model_path)
-    logger.info(f"Loaded model from {model_path} loaded.")
+    logger.info(f"Loaded model from {model_path}")
 
     # Evaluation
     logger.info("\n***** Running evaluation on test dataset *****")
@@ -32,7 +32,7 @@ def test_model(model_dir: str, task_name: str, data_dir: str):
     predictions = model.predict(texts)
     eval_end_time = time.monotonic()
 
-    preds = [label for sublist in predictions[0] for label in sublist]
+    preds = [label.split('__label__')[1] for sublist in predictions[0] for label in sublist]
 
     print('\n\t**** Classification report ****\n')
     print(classification_report(true_labels, preds))
