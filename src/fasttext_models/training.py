@@ -8,6 +8,7 @@ from typing import Tuple
 import fasttext
 
 from src.data.data_processing import get_task_dataset_dir
+from src.fasttext_models.evaluation import test_model
 from src.settings import MODELS_FOLDER
 from src.utils import dictionary_to_json, is_folder_empty
 
@@ -33,7 +34,8 @@ def train_model(model_name: str, task_name: str, data_dir: str, dim: int = 300, 
     quantize_fasttext_model(model, model_name, task_name, output_dir_quantized, train_set_dir, training_duration)
 
     if do_test:
-        pass
+        test_model(output_dir, task_name, data_dir)
+        test_model(output_dir_quantized, task_name, data_dir)
 
 
 def train_fastext_model(model_name: str, task_name: str, output_dir: str,
