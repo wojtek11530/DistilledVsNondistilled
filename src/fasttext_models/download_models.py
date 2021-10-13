@@ -1,5 +1,6 @@
+import gzip
 import os
-import tarfile
+import shutil
 
 import requests
 from fasttext import load_model
@@ -59,8 +60,9 @@ en_output_gz = os.path.join(fasttext_folder, 'cc.en.300.bin.gz')
 en_output = os.path.join(fasttext_folder, 'cc.en.300.bin')
 download_file(EN_MODEL_URL, en_output_gz)
 
-with tarfile.open(en_output_gz, "r") as gz_ref:
-    gz_ref.extractall(fasttext_folder)
+with gzip.open(en_output_gz, 'rb') as f_in:
+    with open(en_output, 'wb') as f_out:
+        tqdm(shutil.copyfileobj(f_in, f_out))
 
 os.remove(en_output_gz)
 bin_to_vec(en_output)
