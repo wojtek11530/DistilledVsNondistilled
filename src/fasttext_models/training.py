@@ -65,7 +65,7 @@ def quantize_fasttext_model(model, model_name: str, task_name: str,
     # Quantization process
     logger.info("\n***** Running quantization *****")
     quantization_start_time = time.monotonic()
-    model = model.quantize(input=train_set_dir, retrain=True)
+    model.quantize(input=train_set_dir, retrain=True)
     quantization_end_time = time.monotonic()
     # Saving model
     logger.info(f"Saving quantized model in {output_dir}")
