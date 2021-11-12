@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 import torch
 import torch.utils.data
@@ -46,7 +46,6 @@ class DataProcessor(object):
         raise NotImplementedError()
 
     def get_set_type_path(self, data_dir: str, set_type: str):
-        """Gets a collection of `InputExample`s for the test set."""
         raise NotImplementedError()
 
     def get_labels(self):
@@ -96,7 +95,8 @@ class MultiemoProcessor(DataProcessor):
         else:
             return ["z_amb", "z_minus_m", "z_plus_m", "z_zero"]
 
-    def _create_examples(self, lines: List[str], set_type: str) -> List[InputExample]:
+    @staticmethod
+    def _create_examples(lines: List[str], set_type: str) -> List[InputExample]:
         examples = []
         for (i, line) in enumerate(lines):
             guid = "%s-%s" % (set_type, i)
@@ -110,26 +110,53 @@ class MultiemoProcessor(DataProcessor):
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, encodings: BatchEncoding, labels: Optional[torch.Tensor] = None):
-        self.inputs = encodings
-        self.n_examples = len(self.inputs['input_ids'])
-        self.sequence_len = self.inputs['input_ids'].shape[-1]
+        self.data = encodings.data
+        self.n_examples = len(self.data['input_ids'])
         if labels is not None:
-            self.inputs.update({'labels': labels})
+            self.data.update({'labels': labels})
 
     def __getitem__(self, idx: int):
-        return {key: self.inputs[key][idx] for key in self.inputs.keys()}
+        return {key: self.data[key][idx] for key in self.data.keys()}
 
     def __len__(self):
         return self.n_examples
 
 
-processors = {
-    "multiemo": MultiemoProcessor,
-}
+class SmartCollator:
+    def __init__(self, pad_token_id: int, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pad_token_id = pad_token_id
 
-output_modes = {
-    "multiemo": "classification",
-}
+    def collate_batch(self, batch) -> Dict[str, torch.Tensor]:
+        max_size = max([len(ex['input_ids']) for ex in batch])
+
+        batch_inputs = list()
+        batch_attention_masks = list()
+        batch_token_type_ids = list()
+        labels = list()
+
+        for item in batch:
+            batch_inputs += [pad_seq(item['input_ids'], max_size, self.pad_token_id)]
+            batch_attention_masks += [pad_seq(item['attention_mask'], max_size, 0)]
+            if 'labels' in item.keys():
+                labels.append(item['labels'])
+            if 'token_type_ids' in item.keys():
+                batch_token_type_ids += [pad_seq(item['token_type_ids'], max_size, 0)]
+
+        out_batch = {
+            "input_ids": torch.tensor(batch_inputs, dtype=torch.long),
+            "attention_mask": torch.tensor(batch_attention_masks, dtype=torch.long)
+        }
+        if len(labels) != 0:
+            out_batch.update({'labels': torch.tensor(labels)})
+        if len(batch_token_type_ids) != 0:
+            out_batch.update({'token_type_ids': torch.tensor(batch_token_type_ids, dtype=torch.long)})
+
+        return out_batch
+
+
+def pad_seq(seq: List[int], max_batch_len: int, pad_value: int) -> List[int]:
+    return seq + (max_batch_len - len(seq)) * [pad_value]
 
 
 def get_num_labels(task_name: str) -> int:
@@ -159,47 +186,47 @@ def get_task_dataset(task_name: str, set_name: str, tokenizer: PreTrainedTokeniz
     label_ids = []
     for (ex_index, example) in enumerate(examples):
         texts_a.append(example.text_a)
-
         if example.text_b is not None:
             texts_b.append(example.text_b)
-
         label_id = _get_label_id(example, label_map, output_mode)
         label_ids.append(label_id)
 
     if len(texts_a) == len(texts_b):
-        text_tokenized = tokenizer(texts_a, texts_b, truncation=True, padding=True, return_tensors='pt',
-                                   max_length=max_seq_length)
+        text_tokenized = tokenizer(
+            texts_a,
+            texts_b,
+            add_special_tokens=True,
+            truncation=True,
+            padding=False,
+            max_length=max_seq_length,
+            return_attention_mask=True,
+            return_token_type_ids=True
+        )
     else:
-        text_tokenized = tokenizer(texts_a, truncation=True, padding=True, return_tensors='pt',
-                                   max_length=max_seq_length)
+        text_tokenized = tokenizer(
+            texts_a,
+            add_special_tokens=True,
+            truncation=True,
+            padding=False,
+            max_length=max_seq_length,
+            return_attention_mask=True,
+            return_token_type_ids=False
+        )
 
     if output_mode == "classification":
         all_label_ids = torch.tensor(label_ids, dtype=torch.long)
     elif output_mode == "regression":
         all_label_ids = torch.tensor(label_ids, dtype=torch.float)
+    else:
+        raise ValueError('Incorrect output mode')
 
     dataset = Dataset(text_tokenized, all_label_ids)
-    # dataloader = DataLoader(dataset, batch_size=batch_size,
-    #                         shuffle=True if set_name != 'test' else False)
-    return dataset  # , dataloader
+    return dataset
 
 
 def get_task_dataset_dir(task_name: str, set_name: str, raw_data_dir: str) -> str:
     processor = get_task_processor(task_name)
     return processor.get_set_type_path(raw_data_dir, set_name)
-
-
-def get_examples_from_dataset(processor, raw_data_dir, set_name):
-    if set_name.lower() == 'train':
-        examples = processor.get_train_examples(raw_data_dir)
-    elif set_name.lower() == 'dev':
-        examples = processor.get_dev_examples(raw_data_dir)
-    elif set_name.lower() == 'test':
-        examples = processor.get_test_examples(raw_data_dir)
-    else:
-        raise ValueError(
-            '{} as set name not available for now, use \'train\', \'dev\' or \'test\' instead'.format(set_name))
-    return examples
 
 
 def get_examples_from_dataset(processor, raw_data_dir, set_name):
@@ -243,3 +270,12 @@ def _get_label_id(example: InputExample, label_map: dict, output_mode: str) -> U
     else:
         raise KeyError(output_mode)
     return label_id
+
+
+processors = {
+    "multiemo": MultiemoProcessor,
+}
+
+output_modes = {
+    "multiemo": "classification",
+}
