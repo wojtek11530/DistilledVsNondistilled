@@ -24,7 +24,7 @@ def result_to_text_file(result: dict, file_name: str, verbose: bool = True) -> N
 
 def dictionary_to_json(dictionary: dict, file_name: str):
     with open(file_name, "w") as f:
-        json.dump(dictionary, f)
+        json.dump(dictionary, f, indent=2)
 
 
 def is_folder_empty(folder_name: str):
