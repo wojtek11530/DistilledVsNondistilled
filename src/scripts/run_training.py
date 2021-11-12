@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 
-from src.models.training import train_model
+from src.transformer_models.training import train_model
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,

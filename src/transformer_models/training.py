@@ -13,7 +13,7 @@ from transformers import (
     TrainingArguments, get_linear_schedule_with_warmup)
 
 from src.data.data_processing import Dataset, get_num_labels, get_task_dataset
-from src.models.evaluation import compute_metrics, evaluate, test_model
+from src.transformer_models.evaluation import compute_metrics, evaluate, test_model
 from src.settings import MODELS_FOLDER
 from src.utils import dictionary_to_json, is_folder_empty, result_to_text_file
 

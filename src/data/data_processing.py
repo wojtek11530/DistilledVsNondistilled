@@ -41,6 +41,14 @@ class DataProcessor(object):
         """Gets a collection of `InputExample`s for the dev set."""
         raise NotImplementedError()
 
+    def get_test_examples(self, data_dir: str):
+        """Gets a collection of `InputExample`s for the test set."""
+        raise NotImplementedError()
+
+    def get_set_type_path(self, data_dir: str, set_type: str):
+        """Gets a collection of `InputExample`s for the test set."""
+        raise NotImplementedError()
+
     def get_labels(self):
         """Gets the list of labels for this data2 set."""
         raise NotImplementedError()
@@ -64,19 +72,22 @@ class MultiemoProcessor(DataProcessor):
 
     def get_train_examples(self, data_dir: str) -> List[InputExample]:
         """See base class."""
-        file_path = os.path.join(data_dir, self.domain + '.' + self.kind + '.train.' + self.lang + '.txt')
+        file_path = self.get_set_type_path(data_dir, 'train')
         logger.info(f"LOOKING AT {file_path}")
         return self._create_examples(self._read_txt(file_path), "train")
 
     def get_dev_examples(self, data_dir: str) -> List[InputExample]:
         """See base class."""
-        file_path = os.path.join(data_dir, self.domain + '.' + self.kind + '.dev.' + self.lang + '.txt')
+        file_path = self.get_set_type_path(data_dir, 'dev')
         return self._create_examples(self._read_txt(file_path), "dev")
 
     def get_test_examples(self, data_dir: str) -> List[InputExample]:
         """See base class."""
-        file_path = os.path.join(data_dir, self.domain + '.' + self.kind + '.test.' + self.lang + '.txt')
+        file_path = self.get_set_type_path(data_dir, 'test')
         return self._create_examples(self._read_txt(file_path), "test")
+
+    def get_set_type_path(self, data_dir: str, set_type: str) -> str:
+        return os.path.join(data_dir, self.domain + '.' + self.kind + '.' + set_type + '.' + self.lang + '.txt')
 
     def get_labels(self) -> List[str]:
         """See base class."""
@@ -171,6 +182,24 @@ def get_task_dataset(task_name: str, set_name: str, tokenizer: PreTrainedTokeniz
     # dataloader = DataLoader(dataset, batch_size=batch_size,
     #                         shuffle=True if set_name != 'test' else False)
     return dataset  # , dataloader
+
+
+def get_task_dataset_dir(task_name: str, set_name: str, raw_data_dir: str) -> str:
+    processor = get_task_processor(task_name)
+    return processor.get_set_type_path(raw_data_dir, set_name)
+
+
+def get_examples_from_dataset(processor, raw_data_dir, set_name):
+    if set_name.lower() == 'train':
+        examples = processor.get_train_examples(raw_data_dir)
+    elif set_name.lower() == 'dev':
+        examples = processor.get_dev_examples(raw_data_dir)
+    elif set_name.lower() == 'test':
+        examples = processor.get_test_examples(raw_data_dir)
+    else:
+        raise ValueError(
+            '{} as set name not available for now, use \'train\', \'dev\' or \'test\' instead'.format(set_name))
+    return examples
 
 
 def get_examples_from_dataset(processor, raw_data_dir, set_name):

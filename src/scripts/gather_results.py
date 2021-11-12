@@ -10,6 +10,7 @@ from transformers import AutoModelForSequenceClassification
 
 from src.data.data_processing import get_num_labels
 from src.settings import DATA_FOLDER, MODELS_FOLDER
+from src.utils import get_immediate_subdirectories
 
 
 def main():
@@ -27,22 +28,18 @@ def main():
     models_folders = get_immediate_subdirectories(MODELS_FOLDER)
     data = []
     for model_folder in models_folders:
-        fine_tuned_model_directories = get_immediate_subdirectories(model_folder)
-        for ft_model_dir in fine_tuned_model_directories:
-            if task_name in ft_model_dir:
-                data_dict = gather_results(ft_model_dir, task_name)
-                data.append(data_dict)
+        if 'fasttext' not in model_folder:
+            fine_tuned_model_directories = get_immediate_subdirectories(model_folder)
+            for ft_model_dir in fine_tuned_model_directories:
+                if task_name in ft_model_dir:
+                    data_dict = gather_results(ft_model_dir, task_name)
+                    data.append(data_dict)
 
     df = pd.DataFrame(data)
     cols = df.columns.tolist()
     cols = cols[-1:] + cols[:-1]
     df = df[cols]
     df.to_csv(os.path.join(DATA_FOLDER, 'results-' + task_name + '.csv'), index=False)
-
-
-def get_immediate_subdirectories(directory: str):
-    return [os.path.join(directory, name) for name in os.listdir(directory)
-            if os.path.isdir(os.path.join(directory, name))]
 
 
 def gather_results(ft_model_dir: str, task_name: str) -> Dict[str, Any]:
