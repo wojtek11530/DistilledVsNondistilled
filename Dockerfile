@@ -15,3 +15,8 @@ RUN python3.8 -m pip install --upgrade pip && \
 
 COPY ./requirements.txt .
 RUN python3.8 -m pip install --no-cache-dir -r requirements.txt
+
+COPY ./src ./src
+COPY ./models/.gitkeep ./models/.gitkeep
+COPY ./data/.gitkeep ./data/.gitkeep
+COPY ./setup.cfg .
