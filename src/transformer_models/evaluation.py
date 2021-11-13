@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel
 
-from src.data.data_processing import get_num_labels, get_task_dataset, get_labels
+from src.data.data_processing import get_num_labels, get_task_dataset, get_labels, SmartCollator
 from src.utils import dictionary_to_json, result_to_text_file
 
 log_format = '%(asctime)s %(message)s'
@@ -39,7 +39,10 @@ def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 
     test_dataset = get_task_dataset(task_name, set_name='test', tokenizer=tokenizer,
                                     raw_data_dir=data_dir, max_seq_length=max_seq_length)
     logger.info("Test dataset loaded.")
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    collator = SmartCollator(tokenizer.pad_token_id)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, collate_fn=collator.collate_batch,
+                                 pin_memory=True, shuffle=False)
 
     logger.info("\n***** Running evaluation on test dataset *****")
     logger.info("  Num examples = %d", len(test_dataset))
