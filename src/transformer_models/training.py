@@ -97,7 +97,6 @@ def train_with_pytorch_loop(
         warmup_steps: int, weight_decay: float) \
         -> Tuple[int, float]:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = 'cpu'
     logger.info("device: {}".format(device))
     model.to(device)
 
