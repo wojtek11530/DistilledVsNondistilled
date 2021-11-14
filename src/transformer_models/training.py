@@ -129,7 +129,7 @@ def train_with_pytorch_loop(
             outputs = model(**batch)
             loss = outputs.loss
             loss.backward()
-            tr_loss += loss.item().detach()
+            tr_loss += loss.item()
 
             optimizer.step()
             scheduler.step()
