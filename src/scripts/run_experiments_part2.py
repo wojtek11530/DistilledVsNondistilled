@@ -36,13 +36,13 @@ def main():
 
     if not os.path.exists(os.path.join(DATA_FOLDER, 'multiemo2')):
         logger.info("Downloading Multiemo data")
-        cmd = 'python -m src.scripts.download_dataset'
+        cmd = 'python3 -m src.scripts.download_dataset'
         run_process(cmd)
         logger.info("Downloading finished")
 
     for task, models in tasks_to_models.items():
         for model in models:
-            cmd = 'python -m src.scripts.run_training '
+            cmd = 'python3 -m src.scripts.run_training '
             options = [
                 '--model_name', model,
                 '--data_dir', data_dir,
