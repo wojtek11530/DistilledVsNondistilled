@@ -15,8 +15,11 @@ RUN python3.8 -m pip install --upgrade pip && \
 
 COPY ./requirements.txt .
 RUN python3.8 -m pip install --no-cache-dir -r requirements.txt
+RUN rm requirements.txt
 
-COPY ./src ./src
-COPY ./models/.gitkeep ./models/.gitkeep
-COPY ./data/.gitkeep ./data/.gitkeep
-COPY ./setup.cfg .
+ARG USER_ID
+ARG GROUP_ID
+
+RUN addgroup --gid $GROUP_ID user
+RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
+USER user
