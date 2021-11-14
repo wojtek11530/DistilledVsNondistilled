@@ -102,9 +102,9 @@ def train_with_pytorch_loop(
 
     collator = SmartCollator(tokenizer.pad_token_id)
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, collate_fn=collator.collate_batch,
-                                  pin_memory=True, shuffle=True)
+                                  num_workers=1, pin_memory=True, shuffle=True)
     dev_dataloader = DataLoader(dev_dataset, batch_size=batch_size, collate_fn=collator.collate_batch,
-                                pin_memory=True, shuffle=False)
+                                num_workers=1, pin_memory=True, shuffle=False)
     num_training_steps = epochs * len(train_dataloader)
 
     optimizer = get_optimizer(model, learning_rate, weight_decay)
@@ -129,7 +129,7 @@ def train_with_pytorch_loop(
             outputs = model(**batch)
             loss = outputs.loss
             loss.backward()
-            tr_loss += loss.item()
+            tr_loss += loss.item().detach()
 
             optimizer.step()
             scheduler.step()
