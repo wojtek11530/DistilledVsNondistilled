@@ -53,7 +53,7 @@ def main():
             ]
             cmd += ' '.join(options)
 
-            logger.info(f"Training {models} for {task}")
+            logger.info(f"Training {model} for {task}")
             run_process(cmd)
 
         cmd = f'python3 -m src.scripts.gather_results --task_name {task}'

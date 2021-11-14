@@ -13,7 +13,7 @@ data_dir = os.path.join('data', 'multiemo2')
 
 max_seq_length = 512
 batch_size = 16
-num_train_epochs = 3
+num_train_epochs = 1
 learning_rate = 5e-5
 weight_decay = 0.01
 warmup_steps = 0
@@ -21,9 +21,9 @@ warmup_steps = 0
 tasks_to_models = {
     'multiemo_en_all_sentence':
         ['google/mobilebert-uncased',
-         'huawei-noah/TinyBERT_General_6L_768D',
          'huawei-noah/TinyBERT_General_4L_312D',
-         'microsoft/xtremedistil-l6-h256-uncased'
+         'huawei-noah/TinyBERT_General_6L_768D',
+         'microsoft/xtremedistil-l6-h256-uncased',
          'microsoft/xtremedistil-l6-h384-uncased',
          'microsoft/MiniLM-L12-H384-uncased'
          ]
@@ -36,13 +36,13 @@ def main():
 
     if not os.path.exists(os.path.join(DATA_FOLDER, 'multiemo2')):
         logger.info("Downloading Multiemo data")
-        cmd = 'python3 -m src.scripts.download_dataset'
+        cmd = 'python -m src.scripts.download_dataset'
         run_process(cmd)
         logger.info("Downloading finished")
 
     for task, models in tasks_to_models.items():
         for model in models:
-            cmd = 'python3 -m src.scripts.run_training '
+            cmd = 'python -m src.scripts.run_training '
             options = [
                 '--model_name', model,
                 '--data_dir', data_dir,
@@ -55,7 +55,7 @@ def main():
             ]
             cmd += ' '.join(options)
 
-            logger.info(f"Training {models} for {task}")
+            logger.info(f"Training {model} for {task}")
             run_process(cmd)
 
         cmd = f'python3 -m src.scripts.gather_results --task_name {task}'
