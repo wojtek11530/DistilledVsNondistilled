@@ -13,7 +13,7 @@ data_dir = os.path.join('data', 'multiemo2')
 
 max_seq_length = 512
 batch_size = 16
-num_train_epochs = 1
+num_train_epochs = 3
 learning_rate = 5e-5
 weight_decay = 0.01
 warmup_steps = 0
