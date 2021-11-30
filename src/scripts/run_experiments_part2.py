@@ -20,11 +20,13 @@ warmup_steps = 0
 
 tasks_to_models = {
     'multiemo_en_all_sentence':
-        ['bert-base-uncased', 'distilbert-base-uncased',
-         'roberta-base', 'distilroberta-base',
-         'bert-base-multilingual-cased', 'distilbert-base-multilingual-cased'],
-    'multiemo_pl_all_sentence':
-        ['bert-base-multilingual-cased', 'distilbert-base-multilingual-cased']
+        ['google/mobilebert-uncased',
+         'huawei-noah/TinyBERT_General_4L_312D',
+         'huawei-noah/TinyBERT_General_6L_768D',
+         'microsoft/xtremedistil-l6-h256-uncased',
+         'microsoft/xtremedistil-l6-h384-uncased',
+         'microsoft/MiniLM-L12-H384-uncased'
+         ]
 }
 
 

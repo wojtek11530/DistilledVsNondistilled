@@ -10,7 +10,6 @@ from transformers import AutoModelForSequenceClassification
 
 from src.data.data_processing import get_num_labels
 from src.settings import DATA_FOLDER, MODELS_FOLDER
-from src.utils import get_immediate_subdirectories
 
 
 def main():
@@ -25,15 +24,13 @@ def main():
 
     task_name = args.task_name
 
-    models_folders = get_immediate_subdirectories(MODELS_FOLDER)
-    data = []
-    for model_folder in models_folders:
-        if 'fasttext' not in model_folder:
-            fine_tuned_model_directories = get_immediate_subdirectories(model_folder)
-            for ft_model_dir in fine_tuned_model_directories:
-                if task_name in ft_model_dir:
-                    data_dict = gather_results(ft_model_dir, task_name)
-                    data.append(data_dict)
+    models_subdirectories = [x[0] for x in os.walk(MODELS_FOLDER)]
+
+    data = list()
+    for subdirectory in models_subdirectories:
+        if task_name in subdirectory and 'fasttext' not in subdirectory:
+            data_dict = gather_results(subdirectory, task_name)
+            data.append(data_dict)
 
     df = pd.DataFrame(data)
     cols = df.columns.tolist()

@@ -20,11 +20,10 @@ warmup_steps = 0
 
 tasks_to_models = {
     'multiemo_en_all_sentence':
-        ['bert-base-uncased', 'distilbert-base-uncased',
-         'roberta-base', 'distilroberta-base',
-         'bert-base-multilingual-cased', 'distilbert-base-multilingual-cased'],
-    'multiemo_pl_all_sentence':
-        ['bert-base-multilingual-cased', 'distilbert-base-multilingual-cased']
+        ['nreimers/MiniLM-L6-H384-uncased',
+         'nreimers/MiniLMv2-L6-H384-distilled-from-BERT-Base',
+         'nreimers/mMiniLMv2-L6-H384-distilled-from-XLMR-Large'
+         ]
 }
 
 

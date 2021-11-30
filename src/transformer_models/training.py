@@ -12,7 +12,7 @@ from transformers import (
     AdamW, AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel, PreTrainedTokenizerBase, Trainer,
     TrainingArguments, get_linear_schedule_with_warmup)
 
-from src.data.data_processing import Dataset, get_num_labels, get_task_dataset
+from src.data.data_processing import Dataset, SmartCollator, get_num_labels, get_task_dataset
 from src.transformer_models.evaluation import compute_metrics, evaluate, test_model
 from src.settings import MODELS_FOLDER
 from src.utils import dictionary_to_json, is_folder_empty, result_to_text_file
@@ -36,7 +36,6 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     output_training_params_file = os.path.join(output_dir, "training_params.json")
 
     num_labels = get_num_labels(task_name)
-    # output_mode = get_output_mode(task_name)
 
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
@@ -101,8 +100,11 @@ def train_with_pytorch_loop(
     logger.info("device: {}".format(device))
     model.to(device)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    dev_dataloader = DataLoader(dev_dataset, batch_size=batch_size, shuffle=False)
+    collator = SmartCollator(tokenizer.pad_token_id)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, collate_fn=collator.collate_batch,
+                                  pin_memory=True, shuffle=True)
+    dev_dataloader = DataLoader(dev_dataset, batch_size=batch_size, collate_fn=collator.collate_batch,
+                                pin_memory=True, shuffle=False)
     num_training_steps = epochs * len(train_dataloader)
 
     optimizer = get_optimizer(model, learning_rate, weight_decay)
