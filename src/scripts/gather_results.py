@@ -3,13 +3,12 @@ import json
 import os
 from typing import Any, Dict
 
-import GPUtil
 import pandas as pd
 import torch
 from transformers import AutoModelForSequenceClassification
 
 from src.data.data_processing import get_num_labels
-from src.settings import DATA_FOLDER, MODELS_FOLDER
+from src.settings import DATA_FOLDER, MODELS_FOLDER_2
 
 
 def main():
@@ -24,7 +23,7 @@ def main():
 
     task_name = args.task_name
 
-    models_subdirectories = [x[0] for x in os.walk(MODELS_FOLDER)]
+    models_subdirectories = [x[0] for x in os.walk(MODELS_FOLDER_2)]
 
     data = list()
     for subdirectory in models_subdirectories:

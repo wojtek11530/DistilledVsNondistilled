@@ -14,7 +14,7 @@ from transformers import (
 
 from src.data.data_processing import Dataset, SmartCollator, get_num_labels, get_task_dataset
 from src.transformer_models.evaluation import compute_metrics, evaluate, test_model
-from src.settings import MODELS_FOLDER
+from src.settings import MODELS_FOLDER_2
 from src.utils import dictionary_to_json, is_folder_empty, result_to_text_file
 
 log_format = '%(asctime)s %(message)s'
@@ -40,11 +40,11 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
         num_labels=num_labels,
-        cache_dir=os.path.join(MODELS_FOLDER, model_name)
+        cache_dir=os.path.join(MODELS_FOLDER_2, model_name)
     )
     logger.info(f"Model {model_name} loaded.")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=os.path.join(MODELS_FOLDER, model_name),
+    tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=os.path.join(MODELS_FOLDER_2, model_name),
                                               do_lower_case=do_lower_case)
     logger.info(f"Tokenizer {model_name} loaded.")
 
@@ -78,7 +78,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
 
 
 def manage_output_dir(model_name: str, task_name: str) -> str:
-    output_dir = os.path.join(MODELS_FOLDER, model_name, task_name)
+    output_dir = os.path.join(MODELS_FOLDER_2, model_name, task_name)
     run = 1
     while os.path.exists(output_dir + '-run-' + str(run)):
         if is_folder_empty(output_dir + '-run-' + str(run)):
