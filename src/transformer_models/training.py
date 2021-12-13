@@ -27,10 +27,10 @@ PYTORCH_LOOP_TRAINING = True
 
 def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, batch_size: int = 32,
                 learning_rate: float = 5e-5, weight_decay: float = 0.01, warmup_steps: int = 0,
-                max_seq_length: int = 512, do_test: bool = True):
+                max_seq_length: int = 512, do_lower_case: bool = True, do_test: bool = True):
     training_parameters = {'model_name': model_name, 'task_name': task_name, 'epochs': epochs, 'batch_size': batch_size,
                            'learning_rate': learning_rate, 'weight_decay': weight_decay, 'warmup_steps': warmup_steps,
-                           'max_seq_length': max_seq_length}
+                           'max_seq_length': max_seq_length, 'do_lower_case': do_lower_case}
 
     output_dir = manage_output_dir(model_name, task_name)
     output_training_params_file = os.path.join(output_dir, "training_params.json")
@@ -44,7 +44,8 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     )
     logger.info(f"Model {model_name} loaded.")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=os.path.join(MODELS_FOLDER, model_name))
+    tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=os.path.join(MODELS_FOLDER, model_name),
+                                              do_lower_case=do_lower_case)
     logger.info(f"Tokenizer {model_name} loaded.")
 
     logger.info(f"Loading datasets for task {task_name}")
@@ -73,7 +74,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     dictionary_to_json(training_parameters, output_training_params_file)
 
     if do_test:
-        test_model(output_dir, task_name, data_dir, batch_size, max_seq_length)
+        test_model(output_dir, task_name, data_dir, batch_size, max_seq_length, do_lower_case)
 
 
 def manage_output_dir(model_name: str, task_name: str) -> str:
@@ -105,14 +106,15 @@ def train_with_pytorch_loop(
                                   pin_memory=True, shuffle=True)
     dev_dataloader = DataLoader(dev_dataset, batch_size=batch_size, collate_fn=collator.collate_batch,
                                 pin_memory=True, shuffle=False)
-    num_training_steps = epochs * len(train_dataloader)
 
+    num_training_steps = epochs * len(train_dataloader)
     optimizer = get_optimizer(model, learning_rate, weight_decay)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps,
                                                 num_training_steps=num_training_steps)
 
     logger.info("\n***** Running training *****")
     logger.info("  Num examples = %d", len(train_dataset))
+    logger.info("  Num epochs = %d", epochs)
     logger.info("  Batch size = %d", batch_size)
     logger.info("  Num steps = %d", num_training_steps)
 

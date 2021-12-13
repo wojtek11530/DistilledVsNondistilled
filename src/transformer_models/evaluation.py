@@ -21,7 +21,8 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 
-def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 32, max_seq_length: int = 512):
+def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 32,
+               max_seq_length: int = 512, do_lower_case: bool = True):
     num_labels = get_num_labels(task_name)
     labels_list = get_labels(task_name)
 
@@ -33,7 +34,7 @@ def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    tokenizer = AutoTokenizer.from_pretrained(model_dir)
+    tokenizer = AutoTokenizer.from_pretrained(model_dir, do_lower_case=do_lower_case)
     logger.info(f"Best model from {model_dir} loaded.")
 
     test_dataset = get_task_dataset(task_name, set_name='test', tokenizer=tokenizer,
@@ -72,6 +73,7 @@ def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader, device: torch.
     nb_eval_steps = 0
     all_logits = None
     out_label_ids = None
+
     for batch in tqdm(eval_dataloader, desc="Evaluating"):
         model.eval()
         batch = {k: v.to(device) for k, v in batch.items()}

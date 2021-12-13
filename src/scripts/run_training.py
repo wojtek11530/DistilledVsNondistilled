@@ -27,13 +27,13 @@ def main():
                         required=True,
                         help="The name of the task to train.")
     parser.add_argument("--max_seq_length",
-                        default=512,
+                        default=128,
                         type=int,
                         help="The maximum total input sequence length after WordPiece tokenization. \n"
                              "Sequences longer than this will be truncated, and sequences shorter \n"
                              "than this will be padded.")
     parser.add_argument("--batch_size",
-                        default=32,
+                        default=16,
                         type=int,
                         help="Total batch size.")
     parser.add_argument("--learning_rate",
@@ -53,13 +53,16 @@ def main():
                         default=0,
                         type=int,
                         help="Number of steps to perform linear learning rate warmup for.")
+    parser.add_argument("--do_lower_case", action='store_true',
+                        help="Set this flag if you are using an uncased model.")
 
     args = parser.parse_args()
     logger.info('The args: {}'.format(args))
 
     train_model(model_name=args.model_name, task_name=args.task_name, data_dir=args.data_dir,
                 epochs=args.num_train_epochs, batch_size=args.batch_size, learning_rate=args.learning_rate,
-                weight_decay=args.weight_decay, warmup_steps=args.warmup_steps, max_seq_length=args.max_seq_length)
+                weight_decay=args.weight_decay, warmup_steps=args.warmup_steps, max_seq_length=args.max_seq_length,
+                do_lower_case=args.do_lower_case)
 
 
 if __name__ == '__main__':
