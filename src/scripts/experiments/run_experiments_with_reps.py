@@ -16,7 +16,7 @@ REP_NUM = 4
 max_seq_length = 128
 batch_size = 16
 num_train_epochs = 4
-learning_rate = 2e-5
+learning_rate = 5e-5
 weight_decay = 0.01
 warmup_steps = 0
 
