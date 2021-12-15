@@ -24,6 +24,7 @@ def main():
     task_name = args.task_name
 
     models_subdirectories = [x[0] for x in os.walk(MODELS_FOLDER_2)]
+    models_subdirectories = sorted(models_subdirectories)
 
     data = list()
     for subdirectory in models_subdirectories:
