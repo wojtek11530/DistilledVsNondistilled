@@ -54,6 +54,7 @@ def main():
                     '--learning_rate', str(learning_rate),
                     '--weight_decay', str(weight_decay),
                     '--warmup_steps', str(warmup_steps),
+                    '--max_seq_length', str(max_seq_length),
                     '--do_lower_case'
                 ]
                 cmd += ' '.join(options)
