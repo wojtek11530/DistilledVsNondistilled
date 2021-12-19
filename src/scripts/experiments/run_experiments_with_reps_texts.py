@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 data_dir = os.path.join('data', 'multiemo2')
 
-REP_NUM = 4
+REP_NUM = 5
 
-max_seq_length = 512
+max_seq_length = 256
 batch_size = 8
 num_train_epochs = 4
 learning_rate = 5e-5
