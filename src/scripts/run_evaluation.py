@@ -32,6 +32,8 @@ def main():
                         help="The maximum total input sequence length after WordPiece tokenization. \n"
                              "Sequences longer than this will be truncated, and sequences shorter \n"
                              "than this will be padded.")
+    parser.add_argument("--do_lower_case", action='store_true',
+                        help="Set this flag if you are using an uncased model.")
     parser.add_argument("--batch_size",
                         default=32,
                         type=int,
@@ -41,7 +43,7 @@ def main():
     logger.info('The args: {}'.format(args))
 
     test_model(model_dir=args.model_dir, task_name=args.task_name, data_dir=args.data_dir,
-               batch_size=args.batch_size, max_seq_length=args.max_seq_length)
+               batch_size=args.batch_size, max_seq_length=args.max_seq_length, do_lower_case=args.do_lower_case)
 
 
 if __name__ == '__main__':
