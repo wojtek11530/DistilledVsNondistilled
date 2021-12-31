@@ -39,7 +39,6 @@ def train_model(args):
 
     trainer = pl.Trainer(
         max_epochs=args.epochs,
-        callbacks=[EarlyStopping(monitor='val_loss', mode='min', patience=6, verbose=True)],
         gpus=1 if torch.cuda.is_available() else None
     )
 
