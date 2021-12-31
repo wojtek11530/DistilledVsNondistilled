@@ -6,8 +6,8 @@ from typing import Any, Dict
 import pandas as pd
 import torch
 
-from src.data.data_processing import get_num_labels
 from src.lightning_models.mlp import MLPClassifier
+from src.data.data_processing import get_num_labels
 from src.settings import DATA_FOLDER, MODELS_FOLDER_2
 
 from sentence_transformers import SentenceTransformer
