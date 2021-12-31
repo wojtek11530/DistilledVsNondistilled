@@ -39,7 +39,7 @@ def main():
     cols = df.columns.tolist()
     cols = cols[-2:] + cols[:-2]
     df = df[cols]
-    df.to_csv(os.path.join(DATA_FOLDER, 'results_MLP-LaBSE-' + task_name + '.csv'), index=False)
+    df.to_csv(os.path.join(DATA_FOLDER, 'results-MLP-LaBSE-' + task_name + '.csv'), index=False)
 
 
 def gather_results(ft_model_dir: str, task_name: str) -> Dict[str, Any]:
