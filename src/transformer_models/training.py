@@ -15,7 +15,7 @@ from transformers import (
 from src.data.data_processing import Dataset, SmartCollator, get_num_labels, get_task_dataset
 from src.transformer_models.evaluation import compute_metrics, evaluate, test_model
 from src.settings import MODELS_FOLDER_2
-from src.utils import dictionary_to_json, is_folder_empty, result_to_text_file
+from src.utils import dictionary_to_json, result_to_text_file, manage_output_dir
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
@@ -75,20 +75,6 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
 
     if do_test:
         test_model(output_dir, task_name, data_dir, batch_size, max_seq_length, do_lower_case)
-
-
-def manage_output_dir(model_name: str, task_name: str) -> str:
-    output_dir = os.path.join(MODELS_FOLDER_2, model_name, task_name)
-    run = 1
-    while os.path.exists(output_dir + '-run-' + str(run)):
-        if is_folder_empty(output_dir + '-run-' + str(run)):
-            logger.info('folder exist but empty, use it as output')
-            break
-        logger.info(output_dir + '-run-' + str(run) + ' exist, trying next')
-        run += 1
-    output_dir += '-run-' + str(run)
-    os.makedirs(output_dir, exist_ok=True)
-    return output_dir
 
 
 def train_with_pytorch_loop(

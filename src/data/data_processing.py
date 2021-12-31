@@ -188,7 +188,7 @@ def get_task_dataset(task_name: str, set_name: str, tokenizer: PreTrainedTokeniz
         texts_a.append(example.text_a)
         if example.text_b is not None:
             texts_b.append(example.text_b)
-        label_id = _get_label_id(example, label_map, output_mode)
+        label_id = get_label_id(example, label_map, output_mode)
         label_ids.append(label_id)
 
     if len(texts_a) == len(texts_b):
@@ -262,7 +262,7 @@ def get_task_processor(task_name: str) -> DataProcessor:
     return processor
 
 
-def _get_label_id(example: InputExample, label_map: dict, output_mode: str) -> Union[int, float]:
+def get_label_id(example: InputExample, label_map: dict, output_mode: str) -> Union[int, float]:
     if output_mode == "classification":
         label_id = label_map[example.label]
     elif output_mode == "regression":
