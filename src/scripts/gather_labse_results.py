@@ -26,9 +26,12 @@ def main():
     models_subdirectories = [x[0] for x in os.walk(MODELS_FOLDER_2)]
     models_subdirectories = sorted(models_subdirectories)
 
+
+
     data = list()
     for subdirectory in models_subdirectories:
         if task_name in subdirectory and 'MLP-LaBSE' in subdirectory:
+            print(subdirectory)
             data_dict = gather_results(subdirectory, task_name)
             data.append(data_dict)
 
