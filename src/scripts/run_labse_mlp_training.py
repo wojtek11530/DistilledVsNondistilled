@@ -43,7 +43,7 @@ def main():
                         type=int,
                         help="Total batch size.")
     parser.add_argument("--learning_rate",
-                        default=5e-5,
+                        default=5e-3,
                         type=float,
                         help="The initial learning rate for Adam.")
     parser.add_argument('--weight_decay', '--wd',
