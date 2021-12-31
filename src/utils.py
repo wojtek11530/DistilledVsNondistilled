@@ -3,6 +3,8 @@ import logging
 import os
 import sys
 
+from src.settings import MODELS_FOLDER_2
+
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     format=log_format, datefmt='%d/%m/%Y %H:%M:%S')
@@ -37,3 +39,17 @@ def is_folder_empty(folder_name: str):
 def get_immediate_subdirectories(directory: str):
     return [os.path.join(directory, name) for name in os.listdir(directory)
             if os.path.isdir(os.path.join(directory, name))]
+
+
+def manage_output_dir(model_name: str, task_name: str) -> str:
+    output_dir = os.path.join(MODELS_FOLDER_2, model_name, task_name)
+    run = 1
+    while os.path.exists(output_dir + '-run-' + str(run)):
+        if is_folder_empty(output_dir + '-run-' + str(run)):
+            logger.info('folder exist but empty, use it as output')
+            break
+        logger.info(output_dir + '-run-' + str(run) + ' exist, trying next')
+        run += 1
+    output_dir += '-run-' + str(run)
+    os.makedirs(output_dir, exist_ok=True)
+    return output_dir
