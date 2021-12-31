@@ -85,7 +85,7 @@ class LabseDataset(Dataset):
             raise ValueError('Incorrect output mode')
 
         desc = f"Getting embeddings for {task_name}-{set_name}"
-        self.embedding_data = [np.array(embedder(text))for text in tqdm(texts, desc=desc)]
+        self.embedding_data = [np.array(embedder.encode(text)) for text in tqdm(texts, desc=desc)]
         self.labels = all_label_ids
 
     def __getitem__(self, index: int) -> Tuple[np.ndarray, int]:
