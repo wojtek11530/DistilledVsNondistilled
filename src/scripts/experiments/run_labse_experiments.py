@@ -33,7 +33,7 @@ def main():
 
     for task_name in tasks:
         for i in range(REP_NUM):
-            cmd = 'python3 -m src.scripts.run_labse_mlp_training.py '
+            cmd = 'python3 -m src.scripts.run_labse_mlp_training '
             options = [
                 '--data_dir', data_dir,
                 '--task_name', task_name,
@@ -49,7 +49,7 @@ def main():
             logger.info(f"Training LaBSE for {task_name}")
             run_process(cmd)
 
-        cmd = f'python3 -m src.scripts.gather_labse_results.py --task_name {task_name}'
+        cmd = f'python3 -m src.scripts.gather_labse_results --task_name {task_name}'
         logger.info(f"Gathering results to csv for {task_name}")
         run_process(cmd)
 
