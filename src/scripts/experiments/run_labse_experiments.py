@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 
 data_dir = os.path.join('data', 'multiemo2')
 
-REP_NUM = 1
+REP_NUM = 5
 
 batch_size = 16
-num_train_epochs = 50
+num_train_epochs = 20
 learning_rate = 5e-3
 weight_decay = 0.01
 dropout = 0.1
