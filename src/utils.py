@@ -4,7 +4,6 @@ import os
 import sys
 
 from src.settings import MODELS_FOLDER_2
-from src.transformer_models.training import logger
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
