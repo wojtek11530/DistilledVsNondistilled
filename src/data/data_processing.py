@@ -78,11 +78,13 @@ class MultiemoProcessor(DataProcessor):
     def get_dev_examples(self, data_dir: str) -> List[InputExample]:
         """See base class."""
         file_path = self.get_set_type_path(data_dir, 'dev')
+        logger.info(f"LOOKING AT {file_path}")
         return self._create_examples(self._read_txt(file_path), "dev")
 
     def get_test_examples(self, data_dir: str) -> List[InputExample]:
         """See base class."""
         file_path = self.get_set_type_path(data_dir, 'test')
+        logger.info(f"LOOKING AT {file_path}")
         return self._create_examples(self._read_txt(file_path), "test")
 
     def get_set_type_path(self, data_dir: str, set_type: str) -> str:

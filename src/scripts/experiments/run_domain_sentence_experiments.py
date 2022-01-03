@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 data_dir = os.path.join('data', 'multiemo2')
 
-REP_NUM = 1
+REP_NUM = 5
 
 max_seq_length = 128
 batch_size = 16
@@ -23,16 +23,12 @@ warmup_steps = 0
 mode_level = 'sentence'
 
 models = [
+    'bert-base-uncased',
+    'distilbert-base-uncased',
+    'huawei-noah/TinyBERT_General_4L_312D',
+    'huawei-noah/TinyBERT_General_6L_768D',
     'microsoft/xtremedistil-l6-h256-uncased'
 ]
-
-# models = [
-#     'bert-base-uncased',
-#     'distilbert-base-uncased',
-#     'huawei-noah/TinyBERT_General_4L_312D',
-#     'huawei-noah/TinyBERT_General_6L_768D',
-#     'microsoft/xtremedistil-l6-h256-uncased'
-# ]
 
 domains = ['hotels', 'medicine', 'products', 'reviews']
 
@@ -48,6 +44,11 @@ def main():
         logger.info("Downloading finished")
 
     for model in models:
+        # SINGLE DOMAIN RUNS
+        for domain in domains:
+            task_name = f'multiemo_en_{domain}_{mode_level}'
+            run_trainings(model, task_name)
+
         # DOMAIN-OUT RUNS
         for domain in domains:
             task_name = f'multiemo_en_N{domain}_{mode_level}'
@@ -71,11 +72,6 @@ def main():
                     cmd += ' '.join(options)
                     logger.info(f"Evaluation model from {subdirectory} for {eval_task_name}")
                     run_process(cmd)
-
-        # SINGLE DOMAIN RUNS
-        for domain in domains:
-            task_name = f'multiemo_en_{domain}_{mode_level}'
-            run_trainings(model, task_name)
 
         # cmd = f'python3 -m src.scripts.gather_results --task_name {task}'
         # logger.info(f"Gathering results to csv for {task}")

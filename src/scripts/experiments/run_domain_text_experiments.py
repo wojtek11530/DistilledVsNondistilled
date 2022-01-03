@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 data_dir = os.path.join('data', 'multiemo2')
 
-REP_NUM = 1
+REP_NUM = 5
 
 max_seq_length = 256
 batch_size = 8
@@ -23,16 +23,12 @@ warmup_steps = 0
 mode_level = 'text'
 
 models = [
+    'bert-base-uncased',
+    'distilbert-base-uncased',
+    'huawei-noah/TinyBERT_General_4L_312D',
+    'huawei-noah/TinyBERT_General_6L_768D',
     'microsoft/xtremedistil-l6-h256-uncased'
 ]
-
-# models = [
-#     'bert-base-uncased',
-#     'distilbert-base-uncased',
-#     'huawei-noah/TinyBERT_General_4L_312D',
-#     'huawei-noah/TinyBERT_General_6L_768D',
-#     'microsoft/xtremedistil-l6-h256-uncased'
-# ]
 
 domains = ['hotels', 'medicine', 'products', 'reviews']
 
@@ -56,7 +52,7 @@ def main():
         # DOMAIN-OUT RUNS
         for domain in domains:
             task_name = f'multiemo_en_N{domain}_{mode_level}'
-            run_trainings(model, task_name)
+            run_trainings(model, task_name, do_test=False)
 
             model_basename = manage_model_name(model)
             eval_task_name = f'multiemo_en_{domain}_{mode_level}'
