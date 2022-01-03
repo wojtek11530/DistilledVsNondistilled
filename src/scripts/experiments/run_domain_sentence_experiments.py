@@ -51,44 +51,12 @@ def main():
         # SINGLE DOMAIN RUNS
         for domain in domains:
             task_name = f'multiemo_en_{domain}_{mode_level}'
-            for i in range(REP_NUM):
-                cmd = 'python3 -m src.scripts.run_training '
-                options = [
-                    '--model_name', model,
-                    '--data_dir', data_dir,
-                    '--task_name', task_name,
-                    '--batch_size', str(batch_size),
-                    '--num_train_epochs', str(num_train_epochs),
-                    '--learning_rate', str(learning_rate),
-                    '--weight_decay', str(weight_decay),
-                    '--warmup_steps', str(warmup_steps),
-                    '--max_seq_length', str(max_seq_length),
-                    '--do_lower_case'
-                ]
-                cmd += ' '.join(options)
-                logger.info(f"Training {model} for {task_name}")
-                run_process(cmd)
+            run_trainings(model, task_name)
 
         # DOMAIN-OUT RUNS
         for domain in domains:
             task_name = f'multiemo_en_N{domain}_{mode_level}'
-            for i in range(REP_NUM):
-                cmd = 'python3 -m src.scripts.run_training '
-                options = [
-                    '--model_name', model,
-                    '--data_dir', data_dir,
-                    '--task_name', task_name,
-                    '--batch_size', str(batch_size),
-                    '--num_train_epochs', str(num_train_epochs),
-                    '--learning_rate', str(learning_rate),
-                    '--weight_decay', str(weight_decay),
-                    '--warmup_steps', str(warmup_steps),
-                    '--max_seq_length', str(max_seq_length),
-                    '--do_lower_case'
-                ]
-                cmd += ' '.join(options)
-                logger.info(f"Training {model} for {task_name}")
-                run_process(cmd)
+            run_trainings(model, task_name)
 
             model_basename = manage_model_name(model)
             eval_task_name = f'multiemo_en_{domain}_{mode_level}'
@@ -114,8 +82,24 @@ def main():
         # run_process(cmd)
 
 
-def run_process(proc):
-    os.system(proc)
+def run_trainings(model, task_name):
+    for i in range(REP_NUM):
+        cmd = 'python3 -m src.scripts.run_training '
+        options = [
+            '--model_name', model,
+            '--data_dir', data_dir,
+            '--task_name', task_name,
+            '--batch_size', str(batch_size),
+            '--num_train_epochs', str(num_train_epochs),
+            '--learning_rate', str(learning_rate),
+            '--weight_decay', str(weight_decay),
+            '--warmup_steps', str(warmup_steps),
+            '--max_seq_length', str(max_seq_length),
+            '--do_lower_case'
+        ]
+        cmd += ' '.join(options)
+        logger.info(f"Training {model} for {task_name}")
+        run_process(cmd)
 
 
 def manage_model_name(name: str) -> str:
@@ -124,6 +108,10 @@ def manage_model_name(name: str) -> str:
         return spl[1]
     else:
         return name
+
+
+def run_process(proc):
+    os.system(proc)
 
 
 if __name__ == '__main__':
