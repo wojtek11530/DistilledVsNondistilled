@@ -26,6 +26,10 @@ def main():
                         type=str,
                         required=True,
                         help="The name of the task to train.")
+    parser.add_argument("--batch_size",
+                        default=32,
+                        type=int,
+                        help="Total batch size.")
     parser.add_argument("--max_seq_length",
                         default=512,
                         type=int,
@@ -34,10 +38,6 @@ def main():
                              "than this will be padded.")
     parser.add_argument("--do_lower_case", action='store_true',
                         help="Set this flag if you are using an uncased model.")
-    parser.add_argument("--batch_size",
-                        default=32,
-                        type=int,
-                        help="Total batch size.")
 
     args = parser.parse_args()
     logger.info('The args: {}'.format(args))

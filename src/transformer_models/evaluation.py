@@ -56,7 +56,13 @@ def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 
     diff = timedelta(seconds=eval_end_time - eval_start_time)
     diff_seconds = diff.total_seconds()
     result['eval_time'] = diff_seconds
-    result_to_text_file(result, os.path.join(model_dir, "test_results.txt"))
+
+    if task_name in model_dir:
+        result_file_name = 'test_results'
+    else:
+        result_file_name = f'test_results_{task_name}'
+
+    result_to_text_file(result, os.path.join(model_dir, f"{result_file_name}.txt"))
 
     y_pred = np.argmax(y_logits, axis=1)
     print('\n\t**** Classification report ****\n')
@@ -64,7 +70,7 @@ def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 
 
     report = classification_report(y_true, y_pred, target_names=labels_list, output_dict=True)
     report['eval_time'] = diff_seconds
-    dictionary_to_json(report, os.path.join(model_dir, "test_results.json"))
+    dictionary_to_json(report, os.path.join(model_dir, f"{result_file_name}.json"))
 
 
 def evaluate(model: PreTrainedModel, eval_dataloader: DataLoader, device: torch.device) \
