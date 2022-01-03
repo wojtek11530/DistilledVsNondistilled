@@ -49,7 +49,8 @@ def main():
                 '--num_train_epochs', str(num_train_epochs),
                 '--learning_rate', str(learning_rate),
                 '--weight_decay', str(weight_decay),
-                '--warmup_steps', str(warmup_steps)
+                '--warmup_steps', str(warmup_steps),
+                '--do_test'
             ]
             cmd += ' '.join(options)
 

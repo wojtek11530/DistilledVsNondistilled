@@ -13,14 +13,14 @@ data_dir = os.path.join('data', 'multiemo2')
 
 REP_NUM = 1
 
-max_seq_length = 128
-batch_size = 16
+max_seq_length = 256
+batch_size = 8
 num_train_epochs = 4
 learning_rate = 5e-5
 weight_decay = 0.01
 warmup_steps = 0
 
-mode_level = 'sentence'
+mode_level = 'text'
 
 models = [
     'microsoft/xtremedistil-l6-h256-uncased'
@@ -48,10 +48,15 @@ def main():
         logger.info("Downloading finished")
 
     for model in models:
+        # SINGLE DOMAIN RUNS
+        for domain in domains:
+            task_name = f'multiemo_en_{domain}_{mode_level}'
+            run_trainings(model, task_name)
+
         # DOMAIN-OUT RUNS
         for domain in domains:
             task_name = f'multiemo_en_N{domain}_{mode_level}'
-            run_trainings(model, task_name, do_test=False)
+            run_trainings(model, task_name)
 
             model_basename = manage_model_name(model)
             eval_task_name = f'multiemo_en_{domain}_{mode_level}'
@@ -71,11 +76,6 @@ def main():
                     cmd += ' '.join(options)
                     logger.info(f"Evaluation model from {subdirectory} for {eval_task_name}")
                     run_process(cmd)
-
-        # SINGLE DOMAIN RUNS
-        for domain in domains:
-            task_name = f'multiemo_en_{domain}_{mode_level}'
-            run_trainings(model, task_name)
 
         # cmd = f'python3 -m src.scripts.gather_results --task_name {task}'
         # logger.info(f"Gathering results to csv for {task}")

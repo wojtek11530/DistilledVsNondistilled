@@ -55,6 +55,8 @@ def main():
                         help="Number of steps to perform linear learning rate warmup for.")
     parser.add_argument("--do_lower_case", action='store_true',
                         help="Set this flag if you are using an uncased model.")
+    parser.add_argument("--do_test", action='store_true',
+                        help="Set this flag if you want to test on the same dataset.")
 
     args = parser.parse_args()
     logger.info('The args: {}'.format(args))
@@ -62,7 +64,7 @@ def main():
     train_model(model_name=args.model_name, task_name=args.task_name, data_dir=args.data_dir,
                 epochs=args.num_train_epochs, batch_size=args.batch_size, learning_rate=args.learning_rate,
                 weight_decay=args.weight_decay, warmup_steps=args.warmup_steps, max_seq_length=args.max_seq_length,
-                do_lower_case=args.do_lower_case)
+                do_lower_case=args.do_lower_case, do_test=args.do_test)
 
 
 if __name__ == '__main__':
