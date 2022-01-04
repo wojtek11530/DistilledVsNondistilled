@@ -40,7 +40,6 @@ def main():
     models_subdirectories = [subdir for subdir in models_subdirectories if is_good_subdir(subdir, task_level)]
     models_subdirectories = sorted(models_subdirectories)
     models_subdirectories = models_subdirectories[:10]
-    print(models_subdirectories)
 
     data = list()
     for subdirectory in tqdm(models_subdirectories):
@@ -51,10 +50,8 @@ def main():
 
     df = pd.DataFrame(data)
     cols = df.columns.tolist()
-    print(cols)
     cols = cols[-2:] + cols[:-2]
-    print(cols)
-    # df = df[cols]
+    df = df[cols]
     df.to_csv(os.path.join(DATA_FOLDER, 'domain-results-' + task_level + '.csv'), index=False)
 
 
@@ -88,6 +85,11 @@ def gather_results(ft_model_dir: str) -> List[Dict[str, Any]]:
 
         with open(json_file_path) as json_file:
             test_data = json.load(json_file)
+            if 'micro avg' in test_data:
+                acc_val = test_data['micro avg']['f1-score']
+                test_data = {key if key != 'micro avg' else 'accuracy': value for key, value in test_data.items()}
+                test_data['accuracy'] = acc_val
+
             [test_data_dict] = pd.json_normalize(test_data, sep='_').to_dict(orient='records')
 
         results_data = training_data_dict.copy()
