@@ -37,21 +37,20 @@ def main():
         raise ValueError('task_level must be text or sentence')
 
     models_subdirectories = [x[0] for x in os.walk(MODELS_FOLDER_2)]
-    models_subdirectories = filter(lambda subdir: task_level in subdir and
-                                                  any([m in subdir for m in models]),
-                                   models_subdirectories)
+    models_subdirectories = [subdir for subdir in models_subdirectories if is_good_subdir(subdir, task_level)]
     models_subdirectories = sorted(models_subdirectories)
+    print(models_subdirectories)
 
     data = list()
     for subdirectory in tqdm(models_subdirectories):
-        if task_level in subdirectory and any([m in subdirectory for m in models]):
+        if is_good_subdir(subdirectory, task_level):
             data_dict_list = gather_results(subdirectory)
             for data_dict in data_dict_list:
                 data.append(data_dict)
 
     df = pd.DataFrame(data)
     cols = df.columns.tolist()
-    cols = cols[-1:] + cols[:-1]
+    cols = cols[-2:] + cols[:-2]
     df = df[cols]
     df.to_csv(os.path.join(DATA_FOLDER, 'domain-results-' + task_level + '.csv'), index=False)
 
@@ -103,6 +102,10 @@ def gather_results(ft_model_dir: str) -> List[Dict[str, Any]]:
         data_from_dir.append(data)
 
     return data_from_dir
+
+
+def is_good_subdir(subdir: str, task_level: str) -> bool:
+    return task_level in subdir and '_all_' not in subdir and any([m in subdir for m in models])
 
 
 if __name__ == '__main__':
