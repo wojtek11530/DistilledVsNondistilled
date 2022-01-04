@@ -25,6 +25,8 @@ def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 
                max_seq_length: int = 512, do_lower_case: bool = True):
     num_labels = get_num_labels(task_name)
     labels_list = get_labels(task_name)
+    label_map = {label: i for i, label in enumerate(labels_list)}
+    labels = list(label_map.values())
 
     # LOADING THE BEST MODEL
     model = AutoModelForSequenceClassification.from_pretrained(
@@ -66,9 +68,9 @@ def test_model(model_dir: str, task_name: str, data_dir: str, batch_size: int = 
 
     y_pred = np.argmax(y_logits, axis=1)
     print('\n\t**** Classification report ****\n')
-    print(classification_report(y_true, y_pred, target_names=labels_list))
+    print(classification_report(y_true, y_pred, labels=labels, target_names=labels_list))
 
-    report = classification_report(y_true, y_pred, target_names=labels_list, output_dict=True)
+    report = classification_report(y_true, y_pred,  labels=labels, target_names=labels_list, output_dict=True)
     report['eval_time'] = diff_seconds
     dictionary_to_json(report, os.path.join(model_dir, f"{result_file_name}.json"))
 
