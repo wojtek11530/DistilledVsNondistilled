@@ -39,7 +39,7 @@ def main():
     models_subdirectories = [x[0] for x in os.walk(MODELS_FOLDER_2)]
     models_subdirectories = [subdir for subdir in models_subdirectories if is_good_subdir(subdir, task_level)]
     models_subdirectories = sorted(models_subdirectories)
-    models_subdirectories = models_subdirectories[:10]
+    models_subdirectories = models_subdirectories
 
     data = list()
     for subdirectory in tqdm(models_subdirectories):
