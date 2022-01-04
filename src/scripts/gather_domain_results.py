@@ -29,7 +29,7 @@ def main():
         raise ValueError('task_level must be text or sentence')
 
     models_subdirectories = [x[0] for x in os.walk(MODELS_FOLDER_2)]
-    models_subdirectories = filter(lambda subdir: task_level in subdir and 'fasttext' not in subdirectory,
+    models_subdirectories = filter(lambda subdir: task_level in subdir and 'fasttext' not in subdir,
                                    models_subdirectories)
     models_subdirectories = sorted(models_subdirectories)
 
