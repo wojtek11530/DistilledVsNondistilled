@@ -51,8 +51,10 @@ def main():
 
     df = pd.DataFrame(data)
     cols = df.columns.tolist()
-    # cols = cols[-2:] + cols[:-2]
-    df = df[cols]
+    print(cols)
+    cols = cols[-2:] + cols[:-2]
+    print(cols)
+    # df = df[cols]
     df.to_csv(os.path.join(DATA_FOLDER, 'domain-results-' + task_level + '.csv'), index=False)
 
 
