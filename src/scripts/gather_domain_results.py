@@ -39,6 +39,7 @@ def main():
     models_subdirectories = [x[0] for x in os.walk(MODELS_FOLDER_2)]
     models_subdirectories = [subdir for subdir in models_subdirectories if is_good_subdir(subdir, task_level)]
     models_subdirectories = sorted(models_subdirectories)
+    models_subdirectories = models_subdirectories[:10]
     print(models_subdirectories)
 
     data = list()
@@ -50,7 +51,7 @@ def main():
 
     df = pd.DataFrame(data)
     cols = df.columns.tolist()
-    cols = cols[-2:] + cols[:-2]
+    # cols = cols[-2:] + cols[:-2]
     df = df[cols]
     df.to_csv(os.path.join(DATA_FOLDER, 'domain-results-' + task_level + '.csv'), index=False)
 
@@ -80,26 +81,29 @@ def gather_results(ft_model_dir: str) -> List[Dict[str, Any]]:
         parameters_num += p.nelement()
 
     for json_file_path in glob.glob(f"{ft_model_dir}/test_results*.json"):
+        with open(os.path.join(ft_model_dir, 'training_params.json')) as json_file:
+            training_data_dict = json.load(json_file)
+
         with open(json_file_path) as json_file:
             test_data = json.load(json_file)
             [test_data_dict] = pd.json_normalize(test_data, sep='_').to_dict(orient='records')
 
-        data = training_data_dict.copy()  # start with keys and values of x
-        data.update(test_data_dict)
+        results_data = training_data_dict.copy()
+        results_data.update(test_data_dict)
 
-        data['model_size'] = model_size
-        data['memory'] = memory_used
-        data['parameters'] = parameters_num
-        data['name'] = os.path.basename(ft_model_dir)
+        results_data['model_size'] = model_size
+        results_data['memory'] = memory_used
+        results_data['parameters'] = parameters_num
+        results_data['name'] = os.path.basename(ft_model_dir)
 
         result_filename = os.path.basename(json_file_path)
         if result_filename == 'test_results.json':
-            data['eval_task_name'] = training_data_dict['task_name']
+            results_data['eval_task_name'] = training_data_dict['task_name']
         else:
             eval_task_name = result_filename.split('test_results_')[-1].split('.')[0]
-            data['eval_task_name'] = eval_task_name
+            results_data['eval_task_name'] = eval_task_name
 
-        data_from_dir.append(data)
+        data_from_dir.append(results_data)
 
     return data_from_dir
 
