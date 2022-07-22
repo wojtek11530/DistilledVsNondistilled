@@ -45,7 +45,7 @@ def train_model(model_name: str, task_name: str, data_dir: str, epochs: int, bat
     logger.info(f"Model {model_name} loaded.")
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=os.path.join(MODELS_FOLDER_2, model_name),
-                                              do_lower_case=do_lower_case)
+                                            )
     logger.info(f"Tokenizer {model_name} loaded.")
 
     logger.info(f"Loading datasets for task {task_name}")

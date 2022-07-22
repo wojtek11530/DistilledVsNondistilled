@@ -10,3 +10,4 @@ scikit-learn~=1.0
 sentence-transformers~=2.1.0
 transformers~=4.6.1
 torchmetrics~=0.5.1
+seaborn
